@@ -1,0 +1,7 @@
+li a {
+    color : lightcyan;
+}
+body {
+    background: url("images/background.gif") no-repeat;
+    background-size: cover;
+}

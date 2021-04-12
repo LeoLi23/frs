@@ -1,0 +1,60 @@
+{% extends "customer/base.html" %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'customer/style.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Home Page </title>
+</head>
+<body>
+    <br><br><br>
+    <h1> Hi! {{ customer.first.name }} <span class="badge badge-secondary"></span></h1>
+    <br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+    {% if flights %}
+        <h3> You have {{ flights|length }} future flights! <span class="badge badge-secondary"></span></h3>
+          <table class="table table-bordered table-light">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Airline Name</th>
+                  <th scope="col">Flight#</th>
+                  <th scope="col">Depart_date</th>
+                  <th scope="col">Depart_time</th>
+                  <th scope="col">Arrival_date</th>
+                  <th scope="col">Arrival_time</th>
+                    <th scope="col"> Depart_airport_city</th>
+                    <th scope="col"> Arrive_airport_city</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                    {% for flight in flights %}
+                        <tr>
+                          <th scope="row">{{ flight.customerpurchase__ticket_id__airline_name }} </th>
+                          <td>{{ flight.customerpurchase__ticket_id__flight_num }}</td>
+                          <td>{{ flight.customerpurchase__ticket_id__depart_date }}</td>
+                          <td>{{ flight.customerpurchase__ticket_id__depart_time }}</td>
+                            <td> {{ flight.arrival_date}} </td>
+                            <td> {{ flight.arrival_time }} </td>
+                            <td> {{ flight.depart_airport_name }} ({{ flight.depart_airport_name__city }}) </td>
+                            <td> {{ flight.arrive_airport_name }} ({{ flight.arrive_airport_name__city }})</td>
+                        </tr>
+                    {% endfor %}
+              </tbody>
+          </table>
+    {% else %}
+        <h3> {{ message }}</h3>
+    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+    <br>
+</body>
+</html>
+{% endblock content %}

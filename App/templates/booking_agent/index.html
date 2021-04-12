@@ -1,0 +1,24 @@
+{% extends 'booking_agent/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'booking_agent/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agent's Home Page!</title>
+</head>
+<body>
+    <h2> Welcome! </h2>
+    <br>
+        {% if agent %}
+            <ul>
+                <li> {{ agent.agent_email }} </li>
+            </ul>
+        {% else %}
+            <p>Error</p>
+        {% endif %}
+    <br>
+</body>
+</html>
+{% endblock %}
