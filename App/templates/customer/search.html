@@ -42,12 +42,13 @@
 
                           <thead class="thead-dark">
                             <tr>
+                                <th scope="col">Flight#</th>
                               <th scope="col">Airline Name</th>
-                              <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
                                 <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
                                 <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
                                 <th scope="col"> Purchase </th>
                             </tr>
                           </thead>
@@ -55,30 +56,28 @@
                           <tbody>
                                 {% for flight in flights %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.depart_time }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
-                                      <td> {{ flight.arrival_time }}</td>
-
-                                        <td> <a href="purchase?{{ flight.flight_num }}" class = "btn btn-primary bg-lg"> Purchase </a></td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"></a></td>
                                     </tr>
                                 {% endfor %}
                           </tbody>
                      </table>
+
                   {% elif trip_count == 2 %}
                       <br><br>
                       <button type="button" class="btn btn-success btn-lg btn-block"> {{ sourceCity }} ==> {{ destinationCity }} </button>
                       <table class="table table-bordered table-light">
                           <thead class="thead-dark">
                             <tr>
+                                <th scope="col">Flight#</th>
                               <th scope="col">Airline Name</th>
-                              <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
                                 <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
                                 <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
                                 <th scope="col"> Purchase </th>
                             </tr>
                           </thead>
@@ -86,13 +85,10 @@
                           <tbody>
                                 {% for flight in flight_first %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.depart_time }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
-                                      <td> {{ flight.arrival_time }} </td>
-                                    <td> <a href="{% url 'App:customer_purchase' %}" class = "btn btn-primary bg-lg"> Purchase </a></td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"> Purchase</a></td>
                                     </tr>
                                 {% endfor %}
                           </tbody>
@@ -104,12 +100,13 @@
                       <table class="table table-bordered table-light">
                           <thead class="thead-dark">
                             <tr>
+                                <th scope="col">Flight#</th>
                               <th scope="col">Airline Name</th>
-                              <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
                                 <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
                                 <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
                                 <th scope="col"> Purchase </th>
                             </tr>
                           </thead>
@@ -117,13 +114,10 @@
                           <tbody>
                                 {% for flight in flight_second %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.depart_time }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
-                                      <td> {{ flight.arrival_time }} </td>
-                                    <td> <a href="{% url 'App:customer_purchase' %}" class = "btn btn-primary bg-lg"> Purchase </a></td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"> Purchase</a></td>
                                     </tr>
                                 {% endfor %}
                           </tbody>

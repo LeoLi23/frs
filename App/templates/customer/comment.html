@@ -1,0 +1,87 @@
+{% extends "customer/base.html" %}
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Comment Page</title>
+    <script type="text/javascript">
+
+　　function GetUrlParam(paraName) {
+      var url = decodeURI(document.location.toString());
+      var arrObj = url.split("?");
+      if (arrObj.length > 1) {
+          var arrPara = arrObj[1].split("&");
+          var arr;
+
+          for (var i = 0; i < arrPara.length; i++) {
+              arr = arrPara[i].split("=");
+              if (arr != null && arr[0] === paraName) {
+                  return arr[1];
+              }
+          }
+          return "";
+      } else {
+          return "";
+      }
+  }
+
+        function varPass1() {
+            document.getElementById('airline_name').value = GetUrlParam("airline_name");//给HTML元素的value属性赋值
+        }
+        function varPass2() {
+            document.getElementById('flight_num').value = GetUrlParam("flight_num");//给HTML元素的value属性赋值
+        }
+        function varPass3() {
+            document.getElementById('depart_date').value = GetUrlParam("depart_date");//给HTML元素的value属性赋值
+        }
+        function varPass4() {
+            document.getElementById('depart_time').value = GetUrlParam("depart_time");//给HTML元素的value属性赋值
+        }
+    </script>
+</head>
+
+
+<body>
+<br><br><br>
+    <div class = "content-section">
+        {% if msg %}
+            <div class="alert alert-danger" role="alert">
+                {{ msg }}
+            </div>
+        {% endif %}
+        <h2> Your feedback is important for us! </h2>
+
+        <form method = "POST">
+            {% csrf_token %}
+            <label for="airline_name"> Airline name: </label><br>
+            <input type="text" id="airline_name" name="airline_name" value='' onclick="void varPass1();"><br>
+
+            <label for="flight_num"> Flight num:</label><br>
+            <input type="text" id="flight_num" name="flight_num" value='' onclick="void varPass2();"><br>
+
+            <label for="depart_date"> Depart date: </label><br>
+            <input type="text" id="depart_date" name="depart_date" value='' onclick="void varPass3();"><br>
+
+            <label for="depart_time"> Depart time: </label><br>
+            <input type="text" id="depart_time" name="depart_time" value='' onclick="void varPass4();"><br>
+
+            <label for="rating"> Rating: </label><br>
+            <input type="number" id="rating" name="rating" min="0" max="10"><br>
+
+            <div class="mb-6">
+            <label for="comment" class="form-label"> Comment: </label><br>
+            <input type="text" class="form-control" id="comment" name="comment"><br>
+            </div>
+            <br><br>
+
+            <div class = "form-group">
+                <button class = "btn btn-primary" type = "submit"> Submit </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+{% endblock %}

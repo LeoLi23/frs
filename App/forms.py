@@ -173,9 +173,8 @@ class FlightSearchForm(forms.Form):
 
 
 class CustomerPurchaseForm(forms.Form):
-    flight_num = forms.CharField()
     email = forms.EmailField(label='Email', max_length=50)
-    card_type = forms.ChoiceField(choices=(("1", "Debit"), ("2", "Credit")))
+    card_type = forms.ChoiceField(choices=(("Debit", "Debit"), ("Credit", "Credit")))
     card_num = forms.CharField()
     name_on_card = forms.CharField()
     expire_at = forms.DateField()

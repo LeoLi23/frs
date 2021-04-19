@@ -11,6 +11,7 @@ urlpatterns = [
 
     path('customer/register/', views.register_customer, name='register_customer'),
     path('customer/login/', views.login_customer, name='login_customer'),
+    path('customer/logout/',views.logout_customer,name='logout_customer'),
 
     path('staff/register/', views.register_staff, name='register_staff'),
     path('staff/login/', views.login_staff, name='login_staff'),
@@ -20,4 +21,6 @@ urlpatterns = [
 
     path('customer/search/', views.customer_search, name='customer_search'),
     path('customer/search/purchase', views.customer_purchase, name='customer_purchase'),
+    path('customer/comment', views.customer_comment, name = 'customer_comment'),
+
 ]

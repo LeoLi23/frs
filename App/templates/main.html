@@ -82,17 +82,18 @@
                               <th scope="col">Airline Name</th>
                               <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
+                                <th scope="col">Arrival_time</th>
                             </tr>
                           </thead>
 
                           <tbody>
                                 {% for flight in flights %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
                                     </tr>
                                 {% endfor %}
                           </tbody>
@@ -106,17 +107,18 @@
                               <th scope="col">Airline Name</th>
                               <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
+                                <th scope="col">Arrival_time</th>
                             </tr>
                           </thead>
 
                           <tbody>
                                 {% for flight in flight_first %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
                                     </tr>
                                 {% endfor %}
                           </tbody>
@@ -131,17 +133,18 @@
                               <th scope="col">Airline Name</th>
                               <th scope="col">Flight#</th>
                               <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
                               <th scope="col">Arrival_date</th>
+                                <th scope="col">Arrival_time</th>
                             </tr>
                           </thead>
 
                           <tbody>
                                 {% for flight in flight_second %}
                                     <tr>
-                                      <th scope="row">{{ flight.airline_name.airline_name }}</th>
-                                      <td>{{ flight.flight_num }}</td>
-                                      <td>{{ flight.depart_date }}</td>
-                                      <td>{{ flight.arrival_date }}</td>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
                                     </tr>
                                 {% endfor %}
                           </tbody>

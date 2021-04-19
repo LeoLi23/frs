@@ -7,19 +7,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Customer Purchase Page</title>
+    <script type = "text/javascript">
+        function varPass() {
+            document.getElementById('flight_num').value = location.search.slice(1);//给HTML元素的value属性赋值
+        }
+    </script>
 </head>
 
 <body>
 <br><br><br>
     <div class = "content-section">
+        {% if warning_msg %}
+            <div class="alert alert-danger" role="alert">
+                {{ warning_msg }} <a href="{% url 'App:customer_search' %}" class="alert-link">Go back</a>
+            </div>
+        {% endif %}
         <h2> Please fill out the form below! </h2>
-        <h2> The flight number is
-        <script>
-            //document.write(window.name)
-            //document.write(window.localStorage.flight_num)
-            document.write(location.search.slice(1))
-        </script>
-        </h2>
+        <label for="flight_num"> flight_num: </label>
+        <input type="text" id="flight_num" name="flight_num" value="" onclick="void varPass();"><br><br>
+
         <form method = "POST">
             {% csrf_token %}
             <fieldset class = "form-group">
