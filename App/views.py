@@ -415,6 +415,8 @@ def customer_purchase(request):
                         f"update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = '{t_id}'")
                 # update seats
                 cursor.execute(f"update airplane a set a.seats = a.seats - 1 where a.ID = '{ID}'")
+                cursor.close()
+                connection.close()
                 print("Ticket successful purchased!")
                 print("Remaining seats are ", seats - 1)
                 return HttpResponseRedirect(reverse('App:customer_index'))
@@ -444,8 +446,8 @@ def customer_comment(request):
         sql_str = "Insert into rate(customer_email,airline_name,flight_num,depart_date,depart_time,comment,rating) " + \
                   f"VALUES('{customer_email}','{airline_name}','{flight_num}','{depart_date}','{depart_time}','{comment}','{rating}')"
         cursor.execute(sql_str)
-
-        print(sql_str)
+        cursor.close()
+        connection.close()
         return HttpResponseRedirect(reverse('App:customer_index'))
     return render(request, 'customer/comment.html')
 
@@ -453,3 +455,61 @@ def customer_comment(request):
 def logout_customer(request):
     del request.session['user']
     return HttpResponseRedirect(reverse('App:login_customer'))
+
+
+def customer_spending(request):
+    customer_email = request.session['user']
+    if request.method == 'GET':
+        cursor = connection.cursor()
+        sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
+                    where customer_email = '{customer_email}' and YEAR(purchase_date) = YEAR(CURDATE()) - 1"
+        cursor.execute(sql_str1)
+        data1 = cursor.fetchall()[0][0]
+        # last 6 months
+        sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+                    where customer_email = '{customer_email}' and ((MONTH(CURDATE()) - MONTH(purchase_date)) between 1 and 6) or (MONTH(CURDATE()) - MONTH(purchase_date)) <= -6 \
+                    group by MONTH(purchase_date),sold_price;"
+        cursor.execute(sql_str2)
+        res = cursor.fetchall()
+        data2 = [[convert_to_month(r[0]), r[1]] for r in res]
+        cursor.close()
+        connection.close()
+        logging.info(data2)
+        return render(request, 'customer/spending.html', {'data1': data1, 'data2': data2, 'monthDiff': 6})
+
+    elif request.method == 'POST':
+        cursor = connection.cursor()
+        startYear = int(request.POST.get('startYear'))
+        startMonth = int(request.POST.get('startMonth'))
+        endYear = int(request.POST.get('endYear'))
+        endMonth = int(request.POST.get('endMonth'))
+
+        if startYear == endYear:
+            monthDiff = endMonth - startMonth + 1
+            sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
+                                    where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear}"
+
+            sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+                                    where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear} \
+                                    group by MONTH(purchase_date), sold_price;"
+        else:
+            monthDiff = (endMonth + 12 * (endYear - startYear)) - startMonth + 1
+            temp_diff = endMonth + 1 - startMonth
+
+            sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
+                        where customer_email = '{customer_email}' and ({endMonth+1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth+1} - MONTH(purchase_date)) <= {temp_diff}"
+
+            sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+                        where customer_email = '{customer_email}' and ({endMonth+1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth+1} - MONTH(purchase_date)) <= {temp_diff} \
+                        group by MONTH(purchase_date), sold_price;"
+
+        cursor.execute(sql_str1)
+        data1 = cursor.fetchall()[0][0]
+        cursor.execute(sql_str2)
+        res = cursor.fetchall()
+        data2 = [[convert_to_month(r[0]), r[1]] for r in res]
+        cursor.close()
+        connection.close()
+        logging.info(data2)
+
+        return render(request, 'customer/spending.html', {'data1': data1, 'data2': data2, 'monthDiff': monthDiff})

@@ -42,12 +42,7 @@
                         <tr>
                         <td> <a href="comment?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
                                 class="btn btn-primary" role="button" data-bs-toggle="button">Comment</a></td>
-{#                        <script>#}
-{#                            window.localStorage.airline_name = "{{ flight.0 }}"#}
-{#                            window.localStorage.flight_num = "{{ flight.1 }}"#}
-{#                            window.localStorage.depart_date = "{{ flight.2 }}"#}
-{#                            window.localStorage.depart_time = "{{ flight.3 }}"#}
-{#                        </script>#}
+
                         {% for item in flight %}
                             <td> {{ item }} </td>
                         {% endfor %}

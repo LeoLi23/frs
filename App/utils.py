@@ -57,3 +57,30 @@ def convert_str_to_time(t):
         tt += 'AM'
     converted_time = dt.datetime.strptime(tt, "%I:%M %p").time()
     return converted_time
+
+
+def convert_to_month(val):
+    if val == 1:
+        return "Jan"
+    if val == 2:
+        return "Feb"
+    if val == 3:
+        return "Mar"
+    if val == 4:
+        return "Apr"
+    if val == 5:
+        return "May"
+    if val == 6:
+        return "June"
+    if val == 7:
+        return "July"
+    if val == 8:
+        return "Aug"
+    if val == 9:
+        return "Sep"
+    if val == 10:
+        return "Oct"
+    if val == 11:
+        return "Nov"
+    if val == 12:
+        return "Dec"

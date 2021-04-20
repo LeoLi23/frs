@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/App/templates/customer/spending.html">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/App/templates/main.html">
           <value>
             <Attribute>

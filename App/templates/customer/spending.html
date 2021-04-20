@@ -1,0 +1,140 @@
+{% extends 'customer/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8"><link rel="icon" href="https://jscdn.com.cn/highcharts/images/favicon.ico">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            /*CSS code*/
+        </style>
+        <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+        <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+        <script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+        <script src="https://code.highcharts.com.cn/highcharts/themes/dark-unica.js"></script>
+</head>
+
+<body>
+    <br><br><br><br>
+    {% if data1 and monthDiff == 6 %}
+        <h3> Your total spending last year is {{ data1 }}$ </h3>
+    {% elif data1 and monthDiff != 6 %}
+        <h3> Your total spending for previous {{ monthDiff }} months is {{ data1 }}$ </h3>
+    {% else %}
+        <h3> You didn't purchase any ticket last year! </h3>
+    {% endif %}
+    <br><br>
+    <div id="container" style="min-width:400px;height:400px"></div>
+
+    <script>
+            var chart = Highcharts.chart('container', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Total spending for last {{ monthDiff }} months'
+            },
+            xAxis: {
+                type: 'category',
+                labels: {
+                    rotation: -45  // 设置轴标签旋转角度
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'dollars'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Spending',
+                data: [
+                    {% for data in data2 %}
+                        ['{{ data.0 }}',{{ data.1 }}],
+                    {% endfor %}
+                ],
+                dataLabels: {
+                    enabled: true,
+                    rotation: -90,
+                    color: '#FFFFFF',
+                    align: 'left',
+                    y: 20
+                }
+            }]
+    });
+    </script>
+
+    <br><br>
+    <h3> You could specify range for your spending! </h3>
+    <form method = "POST">
+        {% csrf_token %}
+    <div class="row g-2">
+      <div class="col-md">
+        <div class="form-floating">
+          <input type="number" class="form-control" id="startYear" name = "startYear" min="2000" max="2021">
+          <label for="startYear">StartYear</label>
+        </div>
+      </div>
+      <div class="col-md">
+        <div class="form-floating">
+          <select class="form-select" id="startMonth" name = "startMonth">
+            <option selected>Open this select menu</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+          </select>
+          <label for="startMonth">StartMonth</label>
+        </div>
+      </div>
+    </div>
+
+    <br><br>
+
+    <div class="row g-2">
+      <div class="col-md">
+        <div class="form-floating">
+          <input type="number" class="form-control" id="endYear" name = "endYear" min="2000" max="2021">
+          <label for="startYear">endYear</label>
+        </div>
+      </div>
+      <div class="col-md">
+        <div class="form-floating">
+          <select class="form-select" id="endMonth" name = "endMonth">
+            <option selected>Open this select menu</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+          </select>
+          <label for="endMonth">endMonth</label>
+        </div>
+      </div>
+    </div>
+        <br><br>
+    <div class = "form-group">
+        <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+    </div>
+    </form>
+</body>
+</html>
+{% endblock %}
