@@ -55,6 +55,39 @@
             <h3> You don't have history flights!</h3>
     {% endif %}
 
+    {% if current_flights %}
+        <h3> You have {{ current_flights|length }} current flight! </h3>
+          <table class="table table-bordered table-light">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Airline Name</th>
+                  <th scope="col">Flight#</th>
+                  <th scope="col">Depart_date</th>
+                  <th scope="col">Depart_time</th>
+                  <th scope="col">Arrival_date</th>
+                  <th scope="col">Arrival_time</th>
+                    <th scope="col"> Arrive_airport_city</th>
+                    <th scope="col"> Arrive_airport </th>>
+                    <th scope="col"> Depart_airport_city</th>
+                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Cost </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                        {% for flight in current_flights %}
+                            <tr>
+                            {% for item in flight %}
+                                <td> {{ item }} </td>
+                            {% endfor %}
+                            </tr>
+                        {% endfor %}
+              </tbody>
+          </table>
+    {% else %}
+            <h3> You don't have current flight!</h3>
+    {% endif %}
+
     {% if future_flights %}
         <h3> You have {{ future_flights|length }} future flights! <span class="badge badge-secondary"></span></h3>
           <table class="table table-bordered table-light">

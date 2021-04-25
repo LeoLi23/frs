@@ -9,16 +9,180 @@
     <title>Home Page!</title>
 </head>
 <body>
-    <h1> Welcome! </h1>
+<br><br><br>
+    <h2> Hi! {{ staff.2 }} {{ staff.3 }} You are now working for {{ staff|last }} <span class="badge badge-secondary"></span></h2>
     <br>
-        {% if staff %}
-            <ul>
-                <li> {{ staff.f_name }} {{ staff.l_name }} works for {{ staff.airline_name.airline_name }}</li>
-            </ul>
-        {% else %}
-            <p>Error</p>
-        {% endif %}
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                {% if message %}
+                <h3> {{ message }}</h3>
+                {% endif %}
+
+    {% if history_flights %}
+        <h3> {{ staff|last }} has {{ history_flights|length }} history flights! <span class="badge badge-secondary"></span></h3>
+          <table class="table table-bordered table-light">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Airline Name</th>
+                  <th scope="col">Flight#</th>
+                  <th scope="col">Depart_date</th>
+                  <th scope="col">Depart_time</th>
+                  <th scope="col">Arrival_date</th>
+                  <th scope="col">Arrival_time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"> Arrive_airport_city</th>
+                    <th scope="col"> Arrive_airport </th>>
+                    <th scope="col"> Depart_airport_city</th>
+                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Change Status </th>
+
+                </tr>
+              </thead>
+
+              <tbody>
+                        {% for flight in history_flights %}
+                            <tr>
+                            {% for item in flight %}
+                                <td> {{ item }} </td>
+                            {% endfor %}
+                            <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
+                            class="btn btn-primary" role="button" data-bs-toggle="button">change Status</a> </td>
+                            </tr>
+                        {% endfor %}
+              </tbody>
+          </table>
+    {% endif %}
+
+    {% if current_flights %}
+        <h3> {{ staff|last }} has {{ current_flights|length }} current flights <span class="badge badge-secondary"></span></h3>
+          <table class="table table-bordered table-light">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Airline Name</th>
+                  <th scope="col">Flight#</th>
+                  <th scope="col">Depart_date</th>
+                  <th scope="col">Depart_time</th>
+                  <th scope="col">Arrival_date</th>
+                  <th scope="col">Arrival_time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"> Arrive_airport_city</th>
+                    <th scope="col"> Arrive_airport </th>>
+                    <th scope="col"> Depart_airport_city</th>
+                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Change Status </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                        {% for flight in current_flights %}
+                            <tr>
+                            {% for item in flight %}
+                                <td> {{ item }} </td>
+                            {% endfor %}
+                            <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
+                             class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                            </tr>
+                        {% endfor %}
+              </tbody>
+          </table>
+    {% endif %}
+
+    {% if future_flights %}
+        <h3> {{ staff|last }} has {{ future_flights|length }} future flights! <span class="badge badge-secondary"></span></h3>
+          <table class="table table-bordered table-light">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Airline Name</th>
+                  <th scope="col">Flight#</th>
+                  <th scope="col">Depart_date</th>
+                  <th scope="col">Depart_time</th>
+                  <th scope="col">Arrival_date</th>
+                  <th scope="col">Arrival_time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"> Arrive_airport_city</th>
+                    <th scope="col"> Arrive_airport </th>>
+                    <th scope="col"> Depart_airport_city</th>
+                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Change Status </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                        {% for flight in future_flights %}
+                            <tr>
+                            {% for item in flight %}
+                                <td> {{ item }} </td>
+                            {% endfor %}
+                                <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
+                                class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                            </tr>
+                        {% endfor %}
+              </tbody>
+          </table>
+    {% endif %}
+
+    <br><br>
+    <h3> You could obtain current/future/past flights based on following info! </h3><br><br>
+    <form name = 'myform' method = "POST">
+        {% csrf_token %}
+
+    <div class="row g-2">
+      <div class="col-md">
+        <div class="form-floating">
+          <input type="date" class="form-control" id="startDate" required='required' name = "startDate">
+          <label for="startDate">startDate</label>
+        </div>
+      </div>
+      <div class="col-md">
+          <div class="form-floating">
+          <input type="date" class="form-control" id="endDate" required='required' name = "endDate">
+          <label for="endDate">endDate</label>
+        </div>
+        </div>
+      </div>
+        <br><br>
+    <div class="row g-2">
+      <div class="col-md">
+        <div class="form-floating">
+          <input type="text" class="form-control" id="sourceCity" required='required' name = "sourceCity">
+          <label for="sourceCity">sourceCity</label>
+        </div>
+      </div>
+      <div class="col-md">
+          <div class="form-floating">
+          <input type="text" class="form-control" id="sourceAirport" required='required' name = "sourceAirport">
+          <label for="sourceAirport">sourceAirport</label>
+        </div>
+        </div>
+      </div>
+<br><br>
+    <div class="row g-2">
+      <div class="col-md">
+        <div class="form-floating">
+          <input type="text" class="form-control" id="arriveCity" required='required' name = "arriveCity">
+          <label for="arriveCity">arriveCity</label>
+        </div>
+      </div>
+      <div class="col-md">
+          <div class="form-floating">
+          <input type="text" class="form-control" id="arriveAirport" required='required' name = "arriveAirport">
+          <label for="arriveAirport">arriveAirport</label>
+        </div>
+        </div>
+      </div>
+<br><br>
+        <div class = "form-group">
+        <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+        </div>
+    </form>
+                </div>
+            </div>
+        </div>
+    </main>
     <br>
 </body>
 </html>
-{% endblock %}
+{% endblock content %}
+

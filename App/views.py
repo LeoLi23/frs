@@ -13,6 +13,7 @@ logging.basicConfig(
 )
 
 
+# main page
 def info(request):
     if request.method == 'POST':
         form = FlightSearchForm(request.POST)
@@ -92,13 +93,7 @@ def agent_index(request):
     return render(request, 'booking_agent/index.html', {'agent': agent})
 
 
-def staff_index(request):
-    username = request.session['user']
-    staff = Staff.objects.filter(username__exact=username).first()
-    print(staff)
-    return render(request, 'staff/index.html', {'staff': staff})
-
-
+# login and register
 def register_customer(request):
     if request.method == 'POST':
         form = CustomerRegisterForm(request.POST)
@@ -126,7 +121,7 @@ def register_customer(request):
             cursor.close()
             connection.close()
 
-            logging.info("Insertion is successful!")
+            logging.info("Successfully created a customer!")
 
             return HttpResponseRedirect(reverse('App:login_customer'))
     else:
@@ -143,18 +138,16 @@ def register_staff(request):
             f_name = form.cleaned_data['f_name']
             l_name = form.cleaned_data['l_name']
             date_of_birth = form.cleaned_data['date_of_birth']
-
             airline_name = form.cleaned_data['airline_name']
-            airline_instance = Airline.objects.get(airline_name__exact=airline_name)
-
-            hashed_password = hashed(password)
-
-            staff = Staff.objects.create(username=username, password=hashed_password,
-                                         f_name=f_name, l_name=l_name,
-                                         date_of_birth=date_of_birth, airline_name=airline_instance)
-
-            staff.save()
-            messages.success(request, f'Staff Account created for {username}!')
+            password = hashed(password)
+            sql_str = f"insert into staff(username,password,f_name,l_name,date_of_birth,airline_name) values \
+                        ('{username}','{password}','{f_name}','{l_name}','{date_of_birth}','{airline_name}')"
+            print(sql_str)
+            cursor = connection.cursor()
+            cursor.execute(sql_str)
+            cursor.close()
+            connection.close()
+            logging.info("Successfully created a staff!")
             return HttpResponseRedirect(reverse('App:login_staff'))
     else:
         form = StaffRegisterForm()
@@ -188,7 +181,7 @@ def login_customer(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-            hashed_password = hashed(password)
+            password = hashed(password)
 
             cursor = connection.cursor()
             cursor.execute(f"select email from customer where email = '{email}'")
@@ -198,7 +191,7 @@ def login_customer(request):
                 return render(request, 'customer/login.html',
                               {'form': form, 'message': "Email address doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute(f"select email from customer where email = '{email}' and password = '{hashed_password}' ")
+            cursor.execute(f"select email from customer where email = '{email}' and password = '{password}' ")
             check_matches = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -214,7 +207,6 @@ def login_customer(request):
                                'need_to_signup': False})
     else:
         form = CustomerLoginForm()
-        print('no response!')
     return render(request, 'customer/login.html', {'form': form})
 
 
@@ -222,21 +214,27 @@ def login_staff(request):
     if request.method == 'POST':
         form = StaffLoginForm(request.POST)
         if form.is_valid():
+            cursor = connection.cursor()
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            password = hashed(password)
 
-            check_username = Staff.objects.filter(username__exact=username)  # check if email exists
-            hashed_password = hashed(password)
+            cursor.execute(f"select * from staff where username = '{username}'")
+            check_username = cursor.fetchall()
             if not check_username:
                 return render(request, 'staff/login.html',
                               {'form': form, 'message': "username doesn't exist!", 'need_to_signup': True})
 
-            check_matches = Staff.objects.filter(username__exact=username,
-                                                 password=hashed_password)  # check if email and password matches
+            cursor.execute(f"select airline_name from staff where username = '{username}' and password = '{password}'")
+            check_matches = cursor.fetchall()
+            cursor.close()
+            connection.close()
             if check_matches:
                 print('log in successfully')
                 request.session['user'] = username
+                request.session['airline_name'] = check_matches[0][0]
                 print('session ID: ', request.session['user'])
+                print('session airline_name: ', request.session['airline_name'])
                 return HttpResponseRedirect(reverse('App:staff_index'))
             else:
                 return render(request, 'staff/login.html',
@@ -284,7 +282,6 @@ def customer_index(request):
 
     cursor.execute(f"select name from customer where email = '{email}'")
     customer_name = cursor.fetchall()[0][0]
-    print(customer_name)
 
     sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
               "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
@@ -294,15 +291,23 @@ def customer_index(request):
     cursor.close()
     connection.close()
 
-    if len(flights) > 1:
+    print(flights)
+
+    if len(flights) > 0 and len(flights[0]) > 0:
+        # history flights: arrive_datetime < now
+        # future flights: depart_datetime > now
         history_flights = [flight for flight in flights
-                           if previous_than_today(flight[2], flight[3])]
+                           if previous_than_today(flight[4], flight[5])]
         future_flights = [flight for flight in flights
-                          if not previous_than_today(flight[2], flight[3])]
+                          if later_than_today(flight[2], flight[3])]
+        current_flight = [flight for flight in flights if
+                          flight not in history_flights and flight not in future_flights]
         print(history_flights)
         print(future_flights)
+        print(current_flight)
         return render(request, 'customer/index.html',
-                      {'customer': customer_name, 'history_flights': history_flights, 'future_flights': future_flights})
+                      {'customer': customer_name, 'history_flights': history_flights, 'future_flights': future_flights,
+                       'current_flights': current_flight})
     else:
         return render(request, 'customer/index.html',
                       {'customer': customer_name, 'message': "You didn't purchase any ticket!"})
@@ -497,10 +502,10 @@ def customer_spending(request):
             temp_diff = endMonth + 1 - startMonth
 
             sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
-                        where customer_email = '{customer_email}' and ({endMonth+1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth+1} - MONTH(purchase_date)) <= {temp_diff}"
+                        where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff}"
 
             sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
-                        where customer_email = '{customer_email}' and ({endMonth+1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth+1} - MONTH(purchase_date)) <= {temp_diff} \
+                        where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff} \
                         group by MONTH(purchase_date), sold_price;"
 
         cursor.execute(sql_str1)
@@ -513,3 +518,151 @@ def customer_spending(request):
         logging.info(data2)
 
         return render(request, 'customer/spending.html', {'data1': data1, 'data2': data2, 'monthDiff': monthDiff})
+
+
+# Staff use cases
+def staff_index(request):
+    username = request.session['user']
+    cursor = connection.cursor()
+    cursor.execute(f"select * from staff where username = '{username}'")
+    staff = cursor.fetchall()[0]
+    airline_name = staff[-1]
+
+    if request.method == 'GET':
+        cursor.execute(
+            f"select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport "
+            f" from flight,airport as D,airport as A where airline_name = '{airline_name}' and flight.arrive_airport_name = A.name "
+            f"and flight.depart_airport_name = D.name")
+        flights = cursor.fetchall()
+        print(flights)
+        cursor.close()
+        connection.close()
+
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # future flights: depart_datetime > now
+            # history flights: arrive_datetime < now
+            # current_flights: depart_datetime < now and arrive_datetime > now
+            future_flights = [f for f in flights if later_than_today(f[2], f[3]) and before_next_days(f[2], f[3], 30)]
+
+            # dates, airports, cities
+            # history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
+            # current_flights = [f for f in flights if
+            #                    previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
+            logging.info(future_flights)
+            # logging.info(history_flights)
+            # logging.info(current_flights)
+
+            return render(request, 'staff/index.html',
+                          {'staff': staff, 'future_flights': future_flights})
+        else:
+            return render(request, 'staff/index.html',
+                          {'staff': staff, 'message': "No future flights!"})
+
+    if request.method == 'POST':
+        startDate = convert_str_to_date_YYYYMMDD(request.POST.get('startDate'))
+        endDate = convert_str_to_date_YYYYMMDD(request.POST.get('endDate'))
+        sourceCity = request.POST.get('sourceCity')
+        arriveCity = request.POST.get('arriveCity')
+        sourceAirport = request.POST.get('sourceAirport')
+        arriveAirport = request.POST.get('arriveAirport')
+
+        sql_str = f"select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport \
+                from flight,airport as D,airport as A where airline_name = '{airline_name}' and flight.arrive_airport_name = A.name \
+             and flight.depart_airport_name = D.name and D.city = '{sourceCity}' and depart_airport_name = '{sourceAirport}' and A.city = '{arriveCity}' and arrive_airport_name = '{arriveAirport}' \
+             and depart_date between '{startDate}' and '{endDate}'"
+        cursor.execute(sql_str)
+
+        flights = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        print('search results:', flights, 'len = ', len(flights))
+
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # future flights: depart_datetime > now
+            # history flights: arrive_datetime < now
+            # current_flights: depart_datetime < now and arrive_datetime > now
+            future_flights = [f for f in flights if later_than_today(f[2], f[3])]
+
+            # dates, airports, cities
+            history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
+            current_flights = [f for f in flights if
+                               previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
+            logging.info(future_flights)
+            logging.info(history_flights)
+            logging.info(current_flights)
+
+            return render(request, 'staff/index.html',
+                          {'staff': staff, 'future_flights': future_flights, 'history_flights': history_flights,
+                           'current_flights': current_flights})
+
+        else:
+            return render(request, 'staff/index.html',
+                          {'staff': staff, 'message': "No available flights based on search results!"})
+
+
+def view_customers_staff(request):
+    if request.method == 'GET':
+        return render(request, 'staff/view_customers.html', {})
+    elif request.method == 'POST':
+        flight_num = request.POST.get('flight_num')
+        cursor = connection.cursor()
+        # customer-purchase
+        sql_str1 = "select c.name from flight natural join ticket natural join customer_purchase as cp,customer as c where " \
+                   f"cp.customer_email = c.email and flight.flight_num = '{flight_num}'"
+        # agent_purchase
+        sql_str2 = "select c.name from flight natural join ticket natural join agent_purchase as ap, customer as c where " \
+                   f"ap.customer_email = c.email and flight.flight_num = '{flight_num}'"
+
+        cursor.execute(sql_str1)
+        customer_names = cursor.fetchall()
+        cursor.execute(sql_str2)
+        agent_customer_names = cursor.fetchall()
+
+        if agent_customer_names:
+            customer_names += agent_customer_names
+        logging.info(customer_names)
+
+        if len(customer_names) > 0 and len(customer_names[0]) > 0:
+            return render(request, 'staff/view_customers.html',
+                          {'customer_names': customer_names, 'flight_num': flight_num})
+        else:
+            return render(request, 'staff/view_customers.html', {'message': 'No customers in this flight!'})
+
+
+def create_flight_staff(request):
+    username, airline_name = request.session['user'], request.session['airline_name']
+    if request.method == 'GET':
+        cursor = connection.cursor()
+        cursor.execute(f"select distinct airplane_id from flight where airline_name = '{airline_name}'")
+        airplane_ids = cursor.fetchall()
+
+        cursor.execute("select name from airport")
+        airports = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render(request, 'staff/create_flight.html', {'airplane_ids': airplane_ids, 'airports': airports})
+    elif request.method == 'POST':
+        flight_num = request.POST.get('flight_num')
+        depart_date = request.POST.get('depart_date')
+        depart_time = request.POST.get('depart_time')
+        arrive_date = request.POST.get('arrive_date')
+        arrive_time = request.POST.get('arrive_time')
+        airplane_id = request.POST.get('airplane_id')
+        base_price = request.POST.get('base_price')
+        status = request.POST.get('status')
+        arrive_airport_name = request.POST.get('arrive_airport_name')
+        depart_airport_name = request.POST.get('depart_airport_name')
+
+        cursor = connection.cursor()
+        sql_str = "Insert into flight(airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,airplane_id,base_price,status,arrive_airport_name,depart_airport_name)" \
+                  f"VALUES ('{airline_name}','{flight_num}','{depart_date}','{depart_time}','{arrive_date}','{arrive_time}','{airplane_id}','{base_price}','{status}','{arrive_airport_name}','{depart_airport_name}')"
+        cursor.execute(sql_str)
+        return HttpResponseRedirect(reverse('App:staff_index'))
+
+def change_flight_status(request):
+    if request.method == 'POST':
+        pass
+
+def logout_staff(request):
+    del request.session['user']
+    return HttpResponseRedirect(reverse('App:login_staff'))

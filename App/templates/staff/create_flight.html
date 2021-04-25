@@ -1,0 +1,141 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>create flight</title>
+</head>
+<body>
+<br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <br><br><br><br>
+                        <form method = "POST">
+                            {% csrf_token %}
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                   <input type="text" class="form-control" id="flight_num" required='required' name = "flight_num">
+                                   <label for="flight_num">flight_num</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control" id="depart_date" required='required' name = "depart_date">
+                                   <label for="depart_date">depart_date</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="time" class="form-control" id="depart_time" required='required' name = "depart_time">
+                                   <label for="depart_time">depart_time</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+
+                                    <input type="date" class="form-control" id="arrive_date" required='required' name = "arrive_date">
+                                   <label for="arrive_date">arrive_date</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="time" class="form-control" id="arrive_time" required='required' name = "arrive_time">
+                                   <label for="arrive_time">arrive_time</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="airplane_id" name = "airplane_id">
+                                        <option selected>Open this select menu</option>
+                                        {% for id in airplane_ids %}
+                                            <option value="{{ id.0 }}">{{ id.0 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                   <label for="airplane_id">airplane_id</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                   <input type="text" class="form-control" id="base_price" required='required' name = "base_price">
+                                   <label for="base_price">base_price</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="status" name = "status">
+                                        <option selected>Open this select menu</option>
+                                        <option value="on-time">on-time</option>
+                                        <option value="delayed">delayed</option>
+                                    </select>
+                                    <label for="status"> status </label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="arrive_airport_name" name = "arrive_airport_name">
+                                        <option selected>Open this select menu</option>
+                                        {% for airport in airports %}
+                                            <option value="{{ airport.0 }}">{{ airport.0 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                   <label for="arrive_airport_name">arrive_airport_name</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="depart_airport_name" name = "depart_airport_name">
+                                        <option selected>Open this select menu</option>
+                                        {% for airport in airports %}
+                                            <option value="{{ airport.0 }}">{{ airport.0 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                   <label for="depart_airport_name">depart_airport_name</label>
+                                </div>
+                              </div>
+                            </div><br><br>
+
+                            <br><br>
+                            <div class = "form-group">
+                            <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                            </div>
+                        </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Customer, Staff, BookingAgent
+from django.db import connection
 import re
 
 
@@ -25,12 +25,17 @@ class CustomerRegisterForm(forms.Form):
 
     def clean_username(self):
         name = self.cleaned_data.get('name')
+
         if len(name) < 3:
             raise forms.ValidationError("your name must be at least 3 characters log")
         elif len(name) > 20:
             raise forms.ValidationError("your name is too long")
         else:
-            filter_result = Customer.objects.filter(name__exact=name)
+            cursor = connection.cursor()
+            cursor.execute(f"select * from customer where name = '{name}'")
+            filter_result = cursor.fetchall()
+            cursor.close()
+            connection.close()
             if len(filter_result) > 0:
                 raise forms.ValidationError('your name already exists')
         return name
@@ -38,7 +43,11 @@ class CustomerRegisterForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email_check(email):
-            filter_result = Customer.objects.filter(email__exact=email)
+            cursor = connection.cursor()
+            cursor.execute(f"select * from customer where email = '{email}'")
+            filter_result = cursor.fetchall()
+            cursor.close()
+            connection.close()
             if len(filter_result) > 0:
                 raise forms.ValidationError("your email already exists")
         else:
@@ -81,7 +90,11 @@ class StaffRegisterForm(forms.Form):
         elif len(username) > 20:
             raise forms.ValidationError("your username is too long")
         else:
-            filter_result = Staff.objects.filter(username__exact=username)
+            cursor = connection.cursor()
+            cursor.execute(f"select * from staff where username = '{username}'")
+            filter_result = cursor.fetchall()
+            cursor.close()
+            connection.close()
             if len(filter_result) > 0:
                 raise forms.ValidationError('your username already exists')
         return username
@@ -105,7 +118,11 @@ class StaffRegisterForm(forms.Form):
 
     def check_airline_name(self):
         airline_name = self.cleaned_data.get('airline_name')
-        filter_result = Staff.objects.filter(airline_name__exact=airline_name)
+        cursor = connection.cursor()
+        cursor.execute(f"select airline_name from airline where airline_name = '{airline_name}'")
+        filter_result = cursor.fetchall()
+        cursor.close()
+        connection.close()
         if len(filter_result) == 0:
             # this airline name doesn't exist
             print("this airline doesn't exist")
@@ -122,7 +139,11 @@ class BookingAgentRegisterForm(forms.Form):
     def clean_email(self):
         agent_email = self.cleaned_data.get('agent_email')
         if email_check(agent_email):
-            filter_result = BookingAgent.objects.filter(agent_email__exact=agent_email)
+            cursor = connection.cursor()
+            cursor.execute(f"select * from booking_agent where agent_email = '{agent_email}'")
+            filter_result = cursor.fetchall()
+            cursor.close()
+            connection.close()
             if len(filter_result) > 0:
                 raise forms.ValidationError("your agent_email already exists")
         else:

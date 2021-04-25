@@ -31,6 +31,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/App/templates/staff/index.html">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/App/views.py">
           <value>
             <Attribute>

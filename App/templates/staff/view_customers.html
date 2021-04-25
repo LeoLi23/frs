@@ -1,0 +1,63 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View customers</title>
+</head>
+<body>
+<br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    {% if message %}
+                        <h2> {{ message }} </h2>
+                    {% endif %}
+
+                    {% if customer_names %}
+                        <h3> {{ flight_num }} has {{ customer_names|length }} customers! <span class="badge badge-secondary"></span></h3>
+                          <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">Customers</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for name in customer_names %}
+                                            <tr>
+                                            {% for item in name %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                    {% endif %}
+                    <br><br><br><br>
+                    <form method = "POST">
+                        {% csrf_token %}
+                        <div class="row g-2">
+                          <div class="col-md-4">
+                            <div class="form-floating">
+                              <input type="text" class="form-control" id="flight_num" required='required' name = "flight_num">
+                              <label for="flight_num">flight_num</label>
+                            </div>
+                          </div>
+                        </div>
+                        <br><br>
+                        <div class = "form-group">
+                        <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% endblock %}

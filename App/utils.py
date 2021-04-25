@@ -1,5 +1,4 @@
 import hashlib
-from .models import *
 import datetime as dt
 from django.db import connection
 
@@ -44,9 +43,27 @@ def previous_than_today(date, time):
     return datetimeobj < today
 
 
+def later_than_today(date, time):
+    datetimeobj = dt.datetime.combine(date, time)
+    today = dt.datetime.now()
+    return datetimeobj > today
+
+
+def before_next_days(date, time, n):
+    datetimeobj = dt.datetime.combine(date, time)
+    if n > 0:
+        today = dt.datetime.now()
+        target = today + dt.timedelta(days=n)
+        return datetimeobj < target
+
+
 def convert_str_to_date(d):
     converted_date = dt.datetime.strptime(d, "%B %d, %Y").date()
     return converted_date
+
+
+def convert_str_to_date_YYYYMMDD(d):
+    return dt.datetime.strptime(d, "%Y-%m-%d").date()
 
 
 def convert_str_to_time(t):
