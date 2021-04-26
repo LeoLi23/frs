@@ -36,7 +36,7 @@
                     <th scope="col"> Arrive_airport </th>>
                     <th scope="col"> Depart_airport_city</th>
                     <th scope="col"> Depart_airport </th>
-                    <th scope="col"> Change Status </th>
+                    <th scope="col"> View ratings </th>
 
                 </tr>
               </thead>
@@ -47,8 +47,8 @@
                             {% for item in flight %}
                                 <td> {{ item }} </td>
                             {% endfor %}
-                            <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
-                            class="btn btn-primary" role="button" data-bs-toggle="button">change Status</a> </td>
+                            <td> <a href="view_ratings?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
+                             class="btn btn-primary" role="button" data-bs-toggle="button">ratings</a> </td>
                             </tr>
                         {% endfor %}
               </tbody>
@@ -81,8 +81,8 @@
                             {% for item in flight %}
                                 <td> {{ item }} </td>
                             {% endfor %}
-                            <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
-                             class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                            <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}&status={{ flight.6 }}"
+                              class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
                             </tr>
                         {% endfor %}
               </tbody>
@@ -115,8 +115,8 @@
                             {% for item in flight %}
                                 <td> {{ item }} </td>
                             {% endfor %}
-                                <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
-                                class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                                <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}&status={{ flight.6 }}"
+                                 class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
                             </tr>
                         {% endfor %}
               </tbody>

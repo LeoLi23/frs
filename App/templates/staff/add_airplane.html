@@ -1,0 +1,67 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Airplane</title>
+</head>
+<body>
+<br><br><br>
+<main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <br><br>
+                    <h3> Airplanes owned by {{ airline_name }}: </h3> <br><br>
+                    <table class="table table-bordered table-light">
+                                  <thead class="thead-light">
+                                    <tr>
+                                      <th scope="col">Airplane_id</th>
+                                      <th scope="col">Capacity</th>
+                                    </tr>
+                                  </thead>
+
+                                  <tbody>
+                                            {% for airplane in airplane_info %}
+                                                <tr>
+                                                {% for item in airplane %}
+                                                    <td> {{ item }} </td>
+                                                {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                  </tbody>
+                              </table>
+                <br><br><br><br>
+                    <form method = "POST">
+                            {% csrf_token %}
+                            <div class = "row">
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="text" class = "form-control" id="airplane_id" name="airplane_id"><br>
+                                        <label for="airplane_id"> airplane_id </label>
+                                    </div>
+                                </div>
+
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="number" class = "form-control" id="seats" name="seats"><br>
+                                        <label for="seats"> seats </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <br><br>
+                            <div class = "form-group">
+                            <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+</main>
+</body>
+</html>
+{% endblock %}

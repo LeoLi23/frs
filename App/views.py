@@ -5,6 +5,7 @@ from .forms import *
 from django.urls import reverse
 from App.utils import *
 from django.db import connection
+from django.contrib.auth.decorators import login_required
 import logging
 
 logging.basicConfig(
@@ -276,6 +277,11 @@ def login_booking_agent(request):
 
 # Customer use cases
 def customer_index(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
+
     cursor = connection.cursor()
 
     email = request.session['user']  # get email (pk) from session
@@ -314,6 +320,11 @@ def customer_index(request):
 
 
 def customer_search(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
+
     if request.method == 'POST':
         form = FlightSearchForm(request.POST)
         if form.is_valid():
@@ -386,10 +397,15 @@ def customer_search(request):
 
 
 def customer_purchase(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
     if request.method == 'POST':
         form = CustomerPurchaseForm(request.POST)
         if form.is_valid():
-            flight_num = request.POST.get['flight_num']
+            flight_num = request.POST.get('flight_num')
+            logging.info(flight_num)
             customer_email = form.cleaned_data['email']
             card_type = form.cleaned_data['card_type']
             card_num = form.cleaned_data['card_num']
@@ -434,6 +450,10 @@ def customer_purchase(request):
 
 
 def customer_comment(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
     if request.method == 'POST':
         airline_name = request.POST.get('airline_name')
         flight_num = request.POST.get('flight_num')
@@ -458,13 +478,23 @@ def customer_comment(request):
 
 
 def logout_customer(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
     del request.session['user']
     return HttpResponseRedirect(reverse('App:login_customer'))
 
 
 def customer_spending(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_customer'))
+
     customer_email = request.session['user']
     if request.method == 'GET':
+        logging.info(customer_email)
         cursor = connection.cursor()
         sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
                     where customer_email = '{customer_email}' and YEAR(purchase_date) = YEAR(CURDATE()) - 1"
@@ -472,10 +502,12 @@ def customer_spending(request):
         data1 = cursor.fetchall()[0][0]
         # last 6 months
         sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
-                    where customer_email = '{customer_email}' and ((MONTH(CURDATE()) - MONTH(purchase_date)) between 1 and 6) or (MONTH(CURDATE()) - MONTH(purchase_date)) <= -6 \
+                    where customer_email = '{customer_email}' and (((MONTH(CURDATE()) - MONTH(purchase_date)) between 1 and 6) or (MONTH(CURDATE()) - MONTH(purchase_date)) <= -6) \
                     group by MONTH(purchase_date),sold_price;"
+        logging.info(sql_str2)
         cursor.execute(sql_str2)
         res = cursor.fetchall()
+        logging.info(res)
         data2 = [[convert_to_month(r[0]), r[1]] for r in res]
         cursor.close()
         connection.close()
@@ -502,10 +534,10 @@ def customer_spending(request):
             temp_diff = endMonth + 1 - startMonth
 
             sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
-                        where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff}"
+                        where customer_email = '{customer_email}' and (({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff})"
 
             sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
-                        where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff} \
+                        where customer_email = '{customer_email}' and (({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff}) \
                         group by MONTH(purchase_date), sold_price;"
 
         cursor.execute(sql_str1)
@@ -522,7 +554,10 @@ def customer_spending(request):
 
 # Staff use cases
 def staff_index(request):
-    username = request.session['user']
+    try:
+        username = request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
     cursor = connection.cursor()
     cursor.execute(f"select * from staff where username = '{username}'")
     staff = cursor.fetchall()[0]
@@ -601,6 +636,11 @@ def staff_index(request):
 
 
 def view_customers_staff(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
     if request.method == 'GET':
         return render(request, 'staff/view_customers.html', {})
     elif request.method == 'POST':
@@ -630,7 +670,11 @@ def view_customers_staff(request):
 
 
 def create_flight_staff(request):
-    username, airline_name = request.session['user'], request.session['airline_name']
+    try:
+        username, airline_name = request.session['user'], request.session['airline_name']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
     if request.method == 'GET':
         cursor = connection.cursor()
         cursor.execute(f"select distinct airplane_id from flight where airline_name = '{airline_name}'")
@@ -659,10 +703,120 @@ def create_flight_staff(request):
         cursor.execute(sql_str)
         return HttpResponseRedirect(reverse('App:staff_index'))
 
+
 def change_flight_status(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
+    if request.method == 'GET':
+        return render(request, 'staff/change_status.html')
+    elif request.method == 'POST':
+        newStatus = request.POST.get('newStatus')
+        airline_name = request.POST.get('airline_name')
+        flight_num = request.POST.get('flight_num')
+        depart_date = request.POST.get('depart_date')
+        depart_time = request.POST.get('depart_time')
+
+        depart_date = convert_str_to_date(depart_date)
+        depart_time = convert_str_to_time(depart_time)
+
+        cursor = connection.cursor()
+        sql_str = f"UPDATE flight SET status = '{newStatus}' WHERE airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
+        cursor.execute(sql_str)
+        cursor.close()
+        connection.close()
+        return HttpResponseRedirect(reverse('App:staff_index'))
+
+
+def add_airplane_staff(request):
+    try:
+        airline_name = request.session['airline_name']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
+    cursor = connection.cursor()
+
     if request.method == 'POST':
-        pass
+        airplane_id = request.POST.get('airplane_id')
+        seats = int(request.POST.get('seats'))
+
+        cursor.execute(
+            f"INSERT INTO airplane(ID,airline_name,seats,capacity) VALUES('{airplane_id}','{airline_name}',{seats},{seats})")
+
+    cursor.execute(f"select ID,capacity from airplane where airline_name = '{airline_name}'")
+    airplane_info = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render(request, 'staff/add_airplane.html', {'airplane_info': airplane_info, 'airline_name': airline_name})
+
+
+def add_airport_staff(request):
+    try:
+        airline_name = request.session['airline_name']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
+    cursor = connection.cursor()
+    if request.method == 'POST':
+        airport_name = request.POST.get('airport_name')
+        airport_city = request.POST.get('airport_city')
+
+        cursor.execute(f"INSERT INTO airport(name,city) VALUES('{airport_name}','{airport_city}')")
+
+    cursor.execute("select * from airport order by city ASC")
+    airports = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render(request, 'staff/add_airport.html', {'airports': airports})
+
+
+def view_flight_ratings(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
+    if request.method == 'POST':
+        cursor = connection.cursor()
+        airline_name = request.POST.get('airline_name')
+        flight_num = request.POST.get('flight_num')
+        depart_date = request.POST.get('depart_date')
+        depart_time = request.POST.get('depart_time')
+
+        depart_date = convert_str_to_date(depart_date)
+        depart_time = convert_str_to_time(depart_time)
+
+        sql_str1 = f"select AVG(rating) from rate natural join flight where airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
+        sql_str2 = f"select comment,rating from rate natural join flight where airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
+
+        cursor.execute(sql_str1)
+        avg_rating = cursor.fetchall()
+
+        null_msg = False
+
+        if not avg_rating[0][0]:
+            null_msg = True
+        else:
+            avg_rating = round(avg_rating[0][0],2)
+
+        cursor.execute(sql_str2)
+        infos = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+        return render(request, 'staff/view_flight_ratings.html',
+                      {'avg_rating': avg_rating, 'infos': infos, 'form': False, 'null_msg': null_msg})
+
+    return render(request, 'staff/view_flight_ratings.html', {'form': True})
+
 
 def logout_staff(request):
+    try:
+        request.session['user']
+    except KeyError:
+        return HttpResponseRedirect(reverse('App:login_staff'))
+
     del request.session['user']
     return HttpResponseRedirect(reverse('App:login_staff'))

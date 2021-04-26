@@ -15,12 +15,11 @@ def generate_ticket_id(flight_num):
     # already_booked = CustomerPurchase.objects.values('ticket_id__ticket_id', 'ticket_id__flight_num')
     ticket_ids_booked = {'ticket_id': []}
     result = ''
+
     for pair in already_booked:
         if pair[1] == flight_num:
             ticket_ids_booked['ticket_id'].append(pair[0])
-
     print('ticket_ids_booked: ', ticket_ids_booked)
-    print(flight_num)
 
     sql_str2 = f"select ticket_id from ticket natural join flight where flight_num = '{flight_num}'"
     cursor.execute(sql_str2)
@@ -67,12 +66,21 @@ def convert_str_to_date_YYYYMMDD(d):
 
 
 def convert_str_to_time(t):
-    tt = t[:-4]
-    if t[-4:] == 'p.m.':
-        tt += 'PM'
+    print(t)
+    if ':' not in t:
+        tt = t[:2]
+        if 'p' in t:
+            tt += 'PM'
+        else:
+            tt += 'AM'
+        converted_time = dt.datetime.strptime(tt,"%I %p").time()
     else:
-        tt += 'AM'
-    converted_time = dt.datetime.strptime(tt, "%I:%M %p").time()
+        tt = t[:-4]
+        if t[-4:] == 'p.m.':
+            tt += 'PM'
+        else:
+            tt += 'AM'
+        converted_time = dt.datetime.strptime(tt, "%I:%M %p").time()
     return converted_time
 
 

@@ -1,0 +1,102 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Change Status</title>
+    <script type="text/javascript">
+    　　function GetUrlParam(paraName) {
+          var url = decodeURI(document.location.toString());
+          var arrObj = url.split("?");
+          if (arrObj.length > 1) {
+              var arrPara = arrObj[1].split("&");
+              var arr;
+
+              for (var i = 0; i < arrPara.length; i++) {
+                  arr = arrPara[i].split("=");
+                  if (arr != null && arr[0] === paraName) {
+                      return arr[1];
+                  }
+              }
+              return "";
+          } else {
+              return "";
+          }
+      }
+        function varPass1() {
+            document.getElementById('airline_name').value = GetUrlParam("airline_name");//给HTML元素的value属性赋值
+        }
+        function varPass2() {
+            document.getElementById('flight_num').value = GetUrlParam("flight_num");//给HTML元素的value属性赋值
+        }
+        function varPass3() {
+            document.getElementById('depart_date').value = GetUrlParam("depart_date");//给HTML元素的value属性赋值
+        }
+        function varPass4() {
+            document.getElementById('depart_time').value = GetUrlParam("depart_time");//给HTML元素的value属性赋值
+        }
+    </script>
+</head>
+<body>
+<br><br><br>
+<main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <h2> Old status: <script> document.write(GetUrlParam("status"))</script> </h2>
+                    <form method = "POST">
+                            {% csrf_token %}
+                            <div class = "row">
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="text" class = "form-control" id="airline_name" name="airline_name" value='' onclick="void varPass1();"><br>
+                                        <label for="airline_name"> Airline name: </label>
+                                    </div>
+                                </div>
+
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="text" class = "form-control" id="flight_num" name="flight_num" value='' onclick="void varPass2();"><br>
+                                        <label for="flight_num"> Flight num:</label>
+                                     </div>
+                                </div>
+
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="text" class = "form-control" id="depart_date" name="depart_date" value='' onclick="void varPass3();"><br>
+                                        <label for="depart_date"> Depart date: </label>
+                                    </div>
+                                </div>
+
+                                <div class = "col-md">
+                                    <div class="form-floating">
+                                        <input type="text" class = "form-control" id="depart_time" name="depart_time" value='' onclick="void varPass4();"><br>
+                                        <label for="depart_time"> Depart time: </label>
+                                    </div>
+                                </div>
+                            </div>
+                                <br><br>
+
+                        <div class="row g-2">
+                              <div class="col-md-4">
+                                <div class="form-floating">
+                                  <input type="text" class="form-control" id="newStatus" required='required' name = "newStatus">
+                                  <label for="newStatus">newStatus</label>
+                                </div>
+                              </div>
+                            </div>
+                            <br><br>
+                            <div class = "form-group">
+                            <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+</main>
+</body>
+</html>
+{% endblock content %}
