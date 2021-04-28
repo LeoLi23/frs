@@ -1,10 +1,3 @@
-
-{% if message %}
-    <h2> {{ message }} </h2>
-    {% if need_to_signup %}
-        <a class = "ml-2" href = "{% url 'App:register_customer' %}"> Sign Up </a>
-    {% endif %}
-{% endif %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,18 +16,25 @@
                   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                   </button>
-                    </ul>
                   </div>
-                </div>
             </nav>
         </header>
+
         <div class="container">
+        <br><br><br>
+            {% if message %}
+                <h2> {{ message }} </h2>
+            {% endif %}
+            {% if need_to_signup %}
+                <a class = "ml-2" href = "{% url 'App:register_customer' %}"> Sign Up </a>
+            {% endif %}
             <form method = "POST">
                 {% csrf_token %}
+                <br>
                 <fieldset class = "form-group">
-                    <legend class = "border-bottom mb-4"> Welcome! </legend>
                     {{ form.as_p }}
                 </fieldset>
+
                 <div class = "form-group">
                     <button class = "btn btn-primary" type = "submit"> Log in </button>
                 </div>

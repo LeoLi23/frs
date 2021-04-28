@@ -1,6 +1,8 @@
 import hashlib
 import datetime as dt
 from django.db import connection
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 def hashed(pwd):
@@ -73,7 +75,7 @@ def convert_str_to_time(t):
             tt += 'PM'
         else:
             tt += 'AM'
-        converted_time = dt.datetime.strptime(tt,"%I %p").time()
+        converted_time = dt.datetime.strptime(tt, "%I %p").time()
     else:
         tt = t[:-4]
         if t[-4:] == 'p.m.':
@@ -109,3 +111,25 @@ def convert_to_month(val):
         return "Nov"
     if val == 12:
         return "Dec"
+
+
+def login_check_customer(func):
+    def wrapper(request, *args, **kwargs):
+        try:
+            request.session['user']
+        except KeyError:
+            return HttpResponseRedirect(reverse('App:login_customer'))
+        return func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def login_check_staff(func):
+    def wrapper(request, *args, **kwargs):
+        try:
+            request.session['user']
+        except KeyError:
+            return HttpResponseRedirect(reverse('App:login_staff'))
+        return func(request, *args, **kwargs)
+
+    return wrapper

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.contrib import messages
 from .forms import *
 from django.urls import reverse
@@ -196,13 +196,13 @@ def login_customer(request):
             check_matches = cursor.fetchall()
             cursor.close()
             connection.close()
-
             if check_matches:
                 logging.info('log in successfully')
                 request.session['user'] = email
                 logging.info('session ID: ' + request.session['user'])
                 return HttpResponseRedirect(reverse('App:customer_index'))
             else:
+                print('invalid password')
                 return render(request, 'customer/login.html',
                               {'form': form, 'message': 'Wrong password/email Please try again!',
                                'need_to_signup': False})
@@ -276,12 +276,8 @@ def login_booking_agent(request):
 
 
 # Customer use cases
+@login_check_customer
 def customer_index(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
-
     cursor = connection.cursor()
 
     email = request.session['user']  # get email (pk) from session
@@ -319,12 +315,8 @@ def customer_index(request):
                       {'customer': customer_name, 'message': "You didn't purchase any ticket!"})
 
 
+@login_check_customer
 def customer_search(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
-
     if request.method == 'POST':
         form = FlightSearchForm(request.POST)
         if form.is_valid():
@@ -396,11 +388,8 @@ def customer_search(request):
     return render(request, 'customer/search.html', {'form': form})
 
 
+@login_check_customer
 def customer_purchase(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
     if request.method == 'POST':
         form = CustomerPurchaseForm(request.POST)
         if form.is_valid():
@@ -449,11 +438,8 @@ def customer_purchase(request):
     return render(request, 'customer/purchase.html', locals())
 
 
+@login_check_customer
 def customer_comment(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
     if request.method == 'POST':
         airline_name = request.POST.get('airline_name')
         flight_num = request.POST.get('flight_num')
@@ -477,21 +463,14 @@ def customer_comment(request):
     return render(request, 'customer/comment.html')
 
 
+@login_check_customer
 def logout_customer(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
     del request.session['user']
     return HttpResponseRedirect(reverse('App:login_customer'))
 
 
+@login_check_customer
 def customer_spending(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_customer'))
-
     customer_email = request.session['user']
     if request.method == 'GET':
         logging.info(customer_email)
@@ -553,12 +532,10 @@ def customer_spending(request):
 
 
 # Staff use cases
+@login_check_staff
 def staff_index(request):
-    try:
-        username = request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
     cursor = connection.cursor()
+    username = request.session['username']
     cursor.execute(f"select * from staff where username = '{username}'")
     staff = cursor.fetchall()[0]
     airline_name = staff[-1]
@@ -578,15 +555,7 @@ def staff_index(request):
             # history flights: arrive_datetime < now
             # current_flights: depart_datetime < now and arrive_datetime > now
             future_flights = [f for f in flights if later_than_today(f[2], f[3]) and before_next_days(f[2], f[3], 30)]
-
-            # dates, airports, cities
-            # history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
-            # current_flights = [f for f in flights if
-            #                    previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
             logging.info(future_flights)
-            # logging.info(history_flights)
-            # logging.info(current_flights)
-
             return render(request, 'staff/index.html',
                           {'staff': staff, 'future_flights': future_flights})
         else:
@@ -635,12 +604,8 @@ def staff_index(request):
                           {'staff': staff, 'message': "No available flights based on search results!"})
 
 
+@login_check_staff
 def view_customers_staff(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
     if request.method == 'GET':
         return render(request, 'staff/view_customers.html', {})
     elif request.method == 'POST':
@@ -669,12 +634,9 @@ def view_customers_staff(request):
             return render(request, 'staff/view_customers.html', {'message': 'No customers in this flight!'})
 
 
+@login_check_staff
 def create_flight_staff(request):
-    try:
-        username, airline_name = request.session['user'], request.session['airline_name']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
+    username, airline_name = request.session['user'], request.session['airline_name']
     if request.method == 'GET':
         cursor = connection.cursor()
         cursor.execute(f"select distinct airplane_id from flight where airline_name = '{airline_name}'")
@@ -704,12 +666,8 @@ def create_flight_staff(request):
         return HttpResponseRedirect(reverse('App:staff_index'))
 
 
+@login_check_staff
 def change_flight_status(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
     if request.method == 'GET':
         return render(request, 'staff/change_status.html')
     elif request.method == 'POST':
@@ -730,12 +688,9 @@ def change_flight_status(request):
         return HttpResponseRedirect(reverse('App:staff_index'))
 
 
+@login_check_staff
 def add_airplane_staff(request):
-    try:
-        airline_name = request.session['airline_name']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
+    airline_name = request.session['airline_name']
     cursor = connection.cursor()
 
     if request.method == 'POST':
@@ -752,12 +707,8 @@ def add_airplane_staff(request):
     return render(request, 'staff/add_airplane.html', {'airplane_info': airplane_info, 'airline_name': airline_name})
 
 
+@login_check_staff
 def add_airport_staff(request):
-    try:
-        airline_name = request.session['airline_name']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
     cursor = connection.cursor()
     if request.method == 'POST':
         airport_name = request.POST.get('airport_name')
@@ -772,12 +723,8 @@ def add_airport_staff(request):
     return render(request, 'staff/add_airport.html', {'airports': airports})
 
 
+@login_check_staff
 def view_flight_ratings(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
     if request.method == 'POST':
         cursor = connection.cursor()
         airline_name = request.POST.get('airline_name')
@@ -799,7 +746,7 @@ def view_flight_ratings(request):
         if not avg_rating[0][0]:
             null_msg = True
         else:
-            avg_rating = round(avg_rating[0][0],2)
+            avg_rating = round(avg_rating[0][0], 2)
 
         cursor.execute(sql_str2)
         infos = cursor.fetchall()
@@ -812,11 +759,7 @@ def view_flight_ratings(request):
     return render(request, 'staff/view_flight_ratings.html', {'form': True})
 
 
+@login_check_staff
 def logout_staff(request):
-    try:
-        request.session['user']
-    except KeyError:
-        return HttpResponseRedirect(reverse('App:login_staff'))
-
     del request.session['user']
     return HttpResponseRedirect(reverse('App:login_staff'))
