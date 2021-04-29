@@ -1,0 +1,44 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View most frequent customers</title>
+</head>
+<body>
+<br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <h2> Most frequent customers within last year! </h2> <br>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">email</th>
+                                    <th scope="col">purchase times</th>
+                                    <th scope="col">View flights </th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for info in customer_infos %}
+                                            <tr>
+                                            {% for item in info %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                            <td> <a href="view_flights_for_one_customer?customer_email={{ info.0 }}"
+                                             class="btn btn-primary" role="button" data-bs-toggle="button">Take me there!</a> </td></tr>
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% endblock %}

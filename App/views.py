@@ -1,11 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib import messages
 from .forms import *
 from django.urls import reverse
 from App.utils import *
 from django.db import connection
-from django.contrib.auth.decorators import login_required
 import logging
 
 logging.basicConfig(
@@ -28,13 +27,14 @@ def info(request):
 
             # one way trip
             if not Return_date:
+                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
                 sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                          f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                          f" and flight.depart_airport_name = %s and D.city = %s and " \
+                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
                 logging.info(sql_str)
                 cursor = connection.cursor()
-                cursor.execute(sql_str)
+                cursor.execute(sql_str, args)
                 flights = cursor.fetchall()
                 cursor.close()
                 connection.close()
@@ -50,22 +50,24 @@ def info(request):
 
             # round trip
             else:
+                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
                 sql_str1 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                           f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
+                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
                 sql_str2 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{ArriveAirport}' and D.city = '{DestinationCity}' and " \
-                           f"flight.arrive_airport_name = '{DepartAirport}' and A.city = '{SourceCity}' and depart_date = '{Return_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
                 cursor = connection.cursor()
 
-                cursor.execute(sql_str1)
+                cursor.execute(sql_str1, args1)
                 flight_first = cursor.fetchall()
 
-                cursor.execute(sql_str2)
+                cursor.execute(sql_str2, args2)
                 flight_second = cursor.fetchall()
 
                 cursor.close()
@@ -199,6 +201,7 @@ def login_customer(request):
             if check_matches:
                 logging.info('log in successfully')
                 request.session['user'] = email
+                request.session['user_type'] = 'customer'
                 logging.info('session ID: ' + request.session['user'])
                 return HttpResponseRedirect(reverse('App:customer_index'))
             else:
@@ -234,8 +237,10 @@ def login_staff(request):
                 print('log in successfully')
                 request.session['user'] = username
                 request.session['airline_name'] = check_matches[0][0]
+                request.session['user_type'] = 'staff'
                 print('session ID: ', request.session['user'])
                 print('session airline_name: ', request.session['airline_name'])
+                print('user type: ', request.session['user_type'])
                 return HttpResponseRedirect(reverse('App:staff_index'))
             else:
                 return render(request, 'staff/login.html',
@@ -264,6 +269,7 @@ def login_booking_agent(request):
             if check_matches:
                 print('log in successfully')
                 request.session['user'] = email
+                request.session['user_type'] = 'agent'
                 print('session ID: ', request.session['user'])
                 return HttpResponseRedirect(reverse('App:agent_index'))
             else:
@@ -466,6 +472,7 @@ def customer_comment(request):
 @login_check_customer
 def logout_customer(request):
     del request.session['user']
+    del request.session['user_type']
     return HttpResponseRedirect(reverse('App:login_customer'))
 
 
@@ -480,9 +487,9 @@ def customer_spending(request):
         cursor.execute(sql_str1)
         data1 = cursor.fetchall()[0][0]
         # last 6 months
-        sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+        sql_str2 = f"select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
                     where customer_email = '{customer_email}' and (((MONTH(CURDATE()) - MONTH(purchase_date)) between 1 and 6) or (MONTH(CURDATE()) - MONTH(purchase_date)) <= -6) \
-                    group by MONTH(purchase_date),sold_price;"
+                    group by MONTH(purchase_date);"
         logging.info(sql_str2)
         cursor.execute(sql_str2)
         res = cursor.fetchall()
@@ -505,9 +512,9 @@ def customer_spending(request):
             sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
                                     where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear}"
 
-            sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+            sql_str2 = f"select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
                                     where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear} \
-                                    group by MONTH(purchase_date), sold_price;"
+                                    group by MONTH(purchase_date);"
         else:
             monthDiff = (endMonth + 12 * (endYear - startYear)) - startMonth + 1
             temp_diff = endMonth + 1 - startMonth
@@ -535,7 +542,7 @@ def customer_spending(request):
 @login_check_staff
 def staff_index(request):
     cursor = connection.cursor()
-    username = request.session['username']
+    username = request.session['user']
     cursor.execute(f"select * from staff where username = '{username}'")
     staff = cursor.fetchall()[0]
     airline_name = staff[-1]
@@ -637,6 +644,8 @@ def view_customers_staff(request):
 @login_check_staff
 def create_flight_staff(request):
     username, airline_name = request.session['user'], request.session['airline_name']
+    if request.session['user_type'] != 'staff':
+        return HttpResponse("You are not authorized to perform this action!")
     if request.method == 'GET':
         cursor = connection.cursor()
         cursor.execute(f"select distinct airplane_id from flight where airline_name = '{airline_name}'")
@@ -668,6 +677,9 @@ def create_flight_staff(request):
 
 @login_check_staff
 def change_flight_status(request):
+    if request.session['user_type'] != 'staff':
+        return HttpResponse("You are not authorized to perform this action!")
+
     if request.method == 'GET':
         return render(request, 'staff/change_status.html')
     elif request.method == 'POST':
@@ -690,6 +702,9 @@ def change_flight_status(request):
 
 @login_check_staff
 def add_airplane_staff(request):
+    if request.session['user_type'] != 'staff':
+        return HttpResponse("You are not authorized to perform this action!")
+
     airline_name = request.session['airline_name']
     cursor = connection.cursor()
 
@@ -709,6 +724,9 @@ def add_airplane_staff(request):
 
 @login_check_staff
 def add_airport_staff(request):
+    if request.session['user_type'] != 'staff':
+        return HttpResponse("You are not authorized to perform this action!")
+
     cursor = connection.cursor()
     if request.method == 'POST':
         airport_name = request.POST.get('airport_name')
@@ -760,6 +778,118 @@ def view_flight_ratings(request):
 
 
 @login_check_staff
+def view_most_frequent_customers(request):
+    airline_name = request.session['airline_name']
+    cursor = connection.cursor()
+    args = (airline_name)
+    sql_str = "select customer_email,count(*) from ticket natural join customer_purchase where airline_name=%s and YEAR(purchase_date) = YEAR(CURDATE()) - 1 group by customer_email order by count(*) desc limit 5"
+    cursor.execute(sql_str, args)
+    customer_infos = cursor.fetchall()
+    print("customer_infos: ", customer_infos)
+    return render(request, 'staff/most_frequent_customers.html', {'customer_infos': customer_infos})
+
+
+@login_check_staff
+def view_flights_for_one_customer(request):
+    if request.method == 'POST':
+        customer_email = request.POST.get('customer_email')
+
+        print('choose customer: ', customer_email)
+
+        cursor = connection.cursor()
+        args = (request.session['airline_name'], customer_email)
+        sql_str = "select flight_num, depart_date, depart_time, depart_airport_name, arrive_airport_name from flight natural join ticket natural join customer_purchase as cp, customer c where cp.customer_email = c.email and airline_name = %s and c.email = %s order by depart_date, depart_time ASC;"
+        cursor.execute(sql_str, args)
+        flight_infos = cursor.fetchall()
+
+        print(flight_infos)
+
+        return render(request, 'staff/view_flights_for_one_customer.html',
+                      {'form': False, 'flight_infos': flight_infos, 'customer_email': customer_email})
+    return render(request, 'staff/view_flights_for_one_customer.html', {'form': True})
+
+
+@login_check_staff
+def view_reports_staff(request):
+    if request.method == 'POST':
+        cursor = connection.cursor()
+        startYear = int(request.POST.get('startYear'))
+        startMonth = int(request.POST.get('startMonth'))
+        endYear = int(request.POST.get('endYear'))
+        endMonth = int(request.POST.get('endMonth'))
+
+        if startYear == endYear:
+            monthDiff = endMonth - startMonth + 1
+            args = (request.session['airline_name'], endMonth + 1, monthDiff, startYear)
+            # customer_purchase
+            sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s"
+
+            sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+                                   where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
+            # agent_purchase
+            sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s"
+
+            sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
+
+        else:
+            monthDiff = (endMonth + 12 * (endYear - startYear)) - startMonth + 1
+            temp_diff = endMonth + 1 - startMonth
+            args = (request.session['airline_name'], endMonth + 1, monthDiff, endMonth + 1, temp_diff)
+            sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+                        where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s)"
+
+            sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+                        where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s) group by MONTH(purchase_date) order by MONTH(purchase_date);"
+
+            # agent_purchase
+            sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s)"
+
+            sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s) \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
+
+        cursor.execute(sql_str1, args)
+        data1_a = cursor.fetchall()[0][0]
+
+        cursor.execute(sql_str3, args)
+        data1_b = cursor.fetchall()[0][0]
+
+        if data1_b is None:
+            data1_b = 0
+        if data1_a is None:
+            data1_a = 0
+
+        data1 = data1_a + data1_b
+        cursor.execute(sql_str2, args)
+        res1 = cursor.fetchall()
+
+        cursor.execute(sql_str4, args)
+        res2 = cursor.fetchall()
+
+        res = res1 + res2
+
+
+        data2 = [[convert_to_month(r[0]), r[1]] for r in res]
+
+        print('data1: ', data1)
+        print('data2: ', data2)
+
+        cursor.close()
+        connection.close()
+
+        return render(request, 'staff/view_reports.html', locals())
+    return render(request, 'staff/view_reports.html')
+
+
+@login_check_staff
 def logout_staff(request):
     del request.session['user']
+    del request.session['airline_name']
+    del request.session['user_type']
     return HttpResponseRedirect(reverse('App:login_staff'))

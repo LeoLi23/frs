@@ -1,0 +1,89 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript">
+    　　function GetUrlParam(paraName) {
+          var url = decodeURI(document.location.toString());
+          var arrObj = url.split("?");
+          if (arrObj.length > 1) {
+              var arrPara = arrObj[1].split("&");
+              var arr;
+
+              for (var i = 0; i < arrPara.length; i++) {
+                  arr = arrPara[i].split("=");
+                  if (arr != null && arr[0] === paraName) {
+                      return arr[1];
+                  }
+              }
+              return "";
+          } else {
+              return "";
+          }
+      }
+      function varPass() {
+            document.getElementById('customer_email').value = GetUrlParam("customer_email");//给HTML元素的value属性赋值
+        }
+    </script>
+
+    <title>flights info </title>
+</head>
+<body>
+    {% if form %}
+        <br><br><br><br>
+            <form method = "POST">
+                {% csrf_token %}
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                       <input type="text" class="form-control" id="customer_email" required='required' name = "customer_email" onclick="void varPass();">
+                       <label for="customer_email">customer_email</label>
+                    </div>
+                  </div>
+                </div>
+                <br><br>
+                        <div class = "form-group">
+                            <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                        </div>
+            </form>
+        <br><br>
+    {% else %}
+    <br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <h2> All the flights of {{ customer_email }} !</h2> <br>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">flight_num</th>
+                                    <th scope="col">depart_date</th>
+                                    <th scope="col">depart_time </th>
+                                    <th scope="col"> depart_airport </th>
+                                    <th scope="col"> arrive_airport </th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for info in flight_infos %}
+                                            <tr>
+                                            {% for item in info %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    {% endif %}
+</body>
+</html>
+{% endblock%}

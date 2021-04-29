@@ -25,7 +25,11 @@ urlpatterns = [
     path('staff/changeStatus', views.change_flight_status, name='change_flight_status'),
     path('staff/add_airplane/', views.add_airplane_staff, name='add_airplane_staff'),
     path('staff/add_airport/', views.add_airport_staff, name='add_airport_staff'),
-    path('staff/view_ratings', views.view_flight_ratings, name = 'view_ratings_staff'),
+    path('staff/view_ratings', views.view_flight_ratings, name='view_ratings_staff'),
+    path('staff/view_frequent_customers/', views.view_most_frequent_customers, name='view_most_frequent_customers'),
+    path('staff/view_frequent_customers/view_flights_for_one_customer', views.view_flights_for_one_customer,
+         name='view_flights_for_one_customer'),
+    path('staff/view_reports', views.view_reports_staff, name='view_reports_staff'),
 
     path('booking_agent/register/', views.register_booking_agent, name='register_booking_agent'),
     path('booking_agent/login/', views.login_booking_agent, name='login_booking_agent'),
