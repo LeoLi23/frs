@@ -1,0 +1,60 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/style.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Top destinations</title>
+</head>
+<body>
+<br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <h2> Top destinations for last 3 months </h2>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">Destinations</th>
+                                    <th scope="col">Times</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                        {% for res in list1 %}
+                                            <tr>
+                                            {% for item in res %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                    <br><br><br>
+                    <h2> Top destinations for last year </h2>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">Destinations</th>
+                                    <th scope="col">Times</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                        {% for res in list2 %}
+                                            <tr>
+                                            {% for item in res %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% endblock %}

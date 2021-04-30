@@ -874,7 +874,6 @@ def view_reports_staff(request):
 
         res = res1 + res2
 
-
         data2 = [[convert_to_month(r[0]), r[1]] for r in res]
 
         print('data1: ', data1)
@@ -885,6 +884,53 @@ def view_reports_staff(request):
 
         return render(request, 'staff/view_reports.html', locals())
     return render(request, 'staff/view_reports.html')
+
+
+@login_check_staff
+def view_top_destinations(request):
+    airline_name = request.session['airline_name']
+    cursor = connection.cursor()
+    args = (airline_name)
+
+    # customer purchase
+    sql_str1 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
+              and (((MONTH(CURDATE()) - MONTH(arrival_date)) between 1 and 3) or (MONTH(CURDATE()) - MONTH(arrival_date)) <= -3) \
+              group by A.city order by count(A.city) desc;"
+    sql_str2 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
+              and Year(arrival_date) = YEAR(curdate()) - 1 \
+              group by A.city order by count(A.city) desc;"
+
+    # agent purchase
+    sql_str3 = "select A.city as destination, count(A.city) as count from agent_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
+              and (((MONTH(CURDATE()) - MONTH(arrival_date)) between 1 and 3) or (MONTH(CURDATE()) - MONTH(arrival_date)) <= -3) \
+              group by A.city order by count(A.city) desc;"
+    sql_str4 = "select A.city as destination, count(A.city) as count from agent_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
+              and Year(arrival_date) = YEAR(curdate()) - 1 \
+              group by A.city order by count(A.city) desc;"
+    cursor.execute(sql_str1, args)
+    result1 = cursor.fetchall()
+
+    cursor.execute(sql_str2, args)
+    result2 = cursor.fetchall()
+
+    cursor.execute(sql_str3, args)
+    result3 = cursor.fetchall()
+
+    cursor.execute(sql_str4, args)
+    result4 = cursor.fetchall()
+
+    # combine results from customer and agent purchase and sort in descending order
+    list1 = top_destination_all_list(result1, result3)
+    list2 = top_destination_all_list(result2, result4)
+
+    # we only want the top 3 popular destinations
+    if len(list1) > 3:
+        list1 = list1[:3]
+    if len(list2) > 3:
+        list2 = list2[:3]
+    cursor.close()
+    connection.close()
+    return render(request, 'staff/view_top_destinations.html', {'list1': list1, 'list2': list2})
 
 
 @login_check_staff

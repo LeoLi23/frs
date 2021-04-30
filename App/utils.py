@@ -133,3 +133,22 @@ def login_check_staff(func):
         return func(request, *args, **kwargs)
 
     return wrapper
+
+
+def top_destination_all_list(c_list, a_list):
+    map = {}
+    for item in c_list:
+        map[item[0]] = item[1]
+
+    if len(a_list) > 0:
+        for item in a_list:
+            if item[0] not in map:
+                map[item[0]] = item[1]
+            else:
+                map[item[0]] += item[1]
+    # map['Guangzhou'] = 5
+    # map['Beijing'] = 2
+    # map['Hangzhou'] = 7
+
+    res = sorted(map.items(), key=lambda x: x[1], reverse=True)
+    return res

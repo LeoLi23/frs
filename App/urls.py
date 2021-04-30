@@ -9,6 +9,7 @@ urlpatterns = [
     path('staff/', views.staff_index, name='staff_index'),
     path('booking_agent/', views.agent_index, name='agent_index'),
 
+    # customer
     path('customer/register/', views.register_customer, name='register_customer'),
     path('customer/login/', views.login_customer, name='login_customer'),
     path('customer/logout/', views.logout_customer, name='logout_customer'),
@@ -17,6 +18,7 @@ urlpatterns = [
     path('customer/comment', views.customer_comment, name='customer_comment'),
     path('customer/myspending/', views.customer_spending, name='customer_spending'),
 
+    # staff
     path('staff/register/', views.register_staff, name='register_staff'),
     path('staff/login/', views.login_staff, name='login_staff'),
     path('staff/logout/', views.logout_staff, name='logout_staff'),
@@ -30,6 +32,7 @@ urlpatterns = [
     path('staff/view_frequent_customers/view_flights_for_one_customer', views.view_flights_for_one_customer,
          name='view_flights_for_one_customer'),
     path('staff/view_reports', views.view_reports_staff, name='view_reports_staff'),
+    path('staff/view_top_destinations', views.view_top_destinations, name='view_top_destinations'),
 
     path('booking_agent/register/', views.register_booking_agent, name='register_booking_agent'),
     path('booking_agent/login/', views.login_booking_agent, name='login_booking_agent'),
