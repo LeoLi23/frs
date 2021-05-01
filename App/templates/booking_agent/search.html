@@ -1,0 +1,134 @@
+{% extends 'booking_agent/base.html'%}
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> search page </title>
+</head>
+<body>
+        <main role="main" class="container">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="content">
+                  <br><br><br>
+                <h3>Search for flights!</h3>
+                <form method = "POST">
+                    {% csrf_token %}
+                    <fieldset class = "form-group">
+                        {{ form.as_p }}
+                    </fieldset>
+                    <div class = "form-group">
+                        <button class = "btn btn-primary" type = "submit"> Search </button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+      </main>
+
+        <main role="main" class="container">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="content">
+                  {% if message %}
+                      <br>
+                      <button type="button" class="btn btn-primary btn-danger btn-block">Can't find corresponding flights! </button>
+                      <br>
+                  {% elif trip_count == 1 %}
+                      <br><br>
+                      <table class="table table-bordered table-light">
+
+                          <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Flight#</th>
+                              <th scope="col">Airline Name</th>
+                              <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
+                              <th scope="col">Arrival_date</th>
+                                <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
+                                <th scope="col"> Purchase </th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                                {% for flight in flights %}
+                                    <tr>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"></a></td>
+                                    </tr>
+                                {% endfor %}
+                          </tbody>
+                     </table>
+
+                  {% elif trip_count == 2 %}
+                      <br><br>
+                      <button type="button" class="btn btn-success btn-lg btn-block"> {{ sourceCity }} ==> {{ destinationCity }} </button>
+                      <table class="table table-bordered table-light">
+                          <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Flight#</th>
+                              <th scope="col">Airline Name</th>
+                              <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
+                              <th scope="col">Arrival_date</th>
+                                <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
+                                <th scope="col"> Purchase </th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                                {% for flight in flight_first %}
+                                    <tr>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"> Purchase</a></td>
+                                    </tr>
+                                {% endfor %}
+                          </tbody>
+                     </table>
+
+                      <br><br>
+
+                      <button type="button" class="btn btn-success btn-lg btn-block"> {{ destinationCity }} ==> {{ sourceCity }} </button>
+                      <table class="table table-bordered table-light">
+                          <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Flight#</th>
+                              <th scope="col">Airline Name</th>
+                              <th scope="col">Depart_date</th>
+                                <th scope="col">Depart_time </th>
+                              <th scope="col">Arrival_date</th>
+                                <th scope="col"> Arrival_time </th>
+                                <th scope="col"> BasePrice($) </th>
+                                <th scope="col"> Purchase </th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                                {% for flight in flight_second %}
+                                    <tr>
+                                        {% for item in flight %}
+                                            <td> {{ item }} </td>
+                                        {% endfor %}
+                                        <td> <a href="purchase?{{ flight|first }}" class = "btn btn-primary"> Purchase</a></td>
+                                    </tr>
+                                {% endfor %}
+                          </tbody>
+                     </table>
+                  {% endif %}
+                  <br><br>
+
+              </div>
+            </div>
+          </div>
+      </main>
+</body>
+</html>
+{% endblock %}

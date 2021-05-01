@@ -176,6 +176,7 @@ class CustomerLoginForm(forms.Form):
 
 class BookingAgentLoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=50)
+    agent_id = forms.CharField(label='agent_id')
     password = forms.CharField(label='Password', widget=forms.PasswordInput())
 
 

@@ -68,7 +68,8 @@ def convert_str_to_date_YYYYMMDD(d):
 
 
 def convert_str_to_time(t):
-    print(t)
+    if 'noon' in t:
+        return "12:00:00"
     if ':' not in t:
         tt = t[:2]
         if 'p' in t:
@@ -130,6 +131,17 @@ def login_check_staff(func):
             request.session['user']
         except KeyError:
             return HttpResponseRedirect(reverse('App:login_staff'))
+        return func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def login_check_agent(func):
+    def wrapper(request, *args, **kwargs):
+        try:
+            request.session['user']
+        except KeyError:
+            return HttpResponseRedirect(reverse('App:login_booking_agent'))
         return func(request, *args, **kwargs)
 
     return wrapper

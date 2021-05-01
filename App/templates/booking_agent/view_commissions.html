@@ -1,0 +1,70 @@
+{% extends 'booking_agent/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Commissions</title>
+</head>
+<body>
+<br><br><br>
+<main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    {% if default %}
+                        <h2> In the past 30 days </h2> <br><br>
+                    {% else %}
+                        <h2> From {{ startDate }} to {{ endDate }} </h2>
+                    {% endif %}
+
+                        <table class="table table-bordered table-light">
+                        <thead class="thead-light">
+                        <tr>
+                        <th scope="col"> Total commission,$ </th>
+                      <th scope="col">Avg commission,$</th>
+                      <th scope="col">Tickets sold</th>
+                    </tr>
+                  </thead>
+
+                    <tbody>
+                  <tr>
+                    <tr>
+                      <td> {{ total_commission }} </td>
+                      <td> {{ avg_commission }} </td>
+                      <td> {{ ticket_count }} </td>
+                    <tr>
+                  </tr>
+                  </tbody>
+              </table>
+                <br><br><br>
+                <h3> You could specify range for your commissions! </h3>
+                 <form method = "POST">
+                    {% csrf_token %}
+                        <div class="row g-2">
+                          <div class="col-md">
+                            <div class="form-floating">
+                              <input type="date" class="form-control" id="startDate" name = "startDate">
+                              <label for="startDate">startDate</label>
+                            </div>
+                          </div>
+
+                          <div class="col-md">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                              <label for="endDate">endDate</label>
+                            </div>
+                          </div>
+                        </div>
+                    <br><br><br><br>
+                    <div class = "form-group">
+                        <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+                    </div>
+            </form>
+                </div>
+            </div>
+        </div>
+</main>
+</body>
+</html>
+{% endblock %}

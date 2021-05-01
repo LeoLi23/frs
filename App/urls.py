@@ -36,5 +36,9 @@ urlpatterns = [
 
     path('booking_agent/register/', views.register_booking_agent, name='register_booking_agent'),
     path('booking_agent/login/', views.login_booking_agent, name='login_booking_agent'),
-
+    path('booking_agent/logout/', views.logout_agent, name='logout_agent'),
+    path('booking_agent/search/', views.agent_search, name='agent_search'),
+    path('booking_agent/search/purchase', views.agent_purchase, name='agent_purchase'),
+    path('booking_agent/view_commissions/', views.agent_commission, name='agent_commission'),
+    path('booking_agent/view_top_customers/', views.view_top_customers, name='agent_top_customers'),
 ]

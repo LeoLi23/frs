@@ -1,0 +1,102 @@
+{% extends 'booking_agent/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><link rel="icon" href="https://jscdn.com.cn/highcharts/images/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+    <script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+    <title>View Top Customers</title>
+</head>
+<body>
+<br><br><br><br>
+<div id="container1" style="min-width:400px;height:800px"></div>
+<div id="container2" style="min-width:400px;height:800px"></div>
+<script>
+        var chart1 = new Highcharts.Chart({
+            chart: {
+                renderTo:'container1',
+                type: 'column'
+            },
+            title: {
+                text: 'Total 5 customers based on tickets bought past 6 months'
+            },
+            xAxis: {
+                type: 'category',
+                labels: {
+                    rotation: -45
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'tickets amount'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'email',
+                data: [
+                    {% for data in data1 %}
+                        ['{{ data.0 }}', {{ data.1 }}],
+                    {% endfor %}
+                ],
+                dataLabels: {
+                    enabled: true,
+                    rotation: -90,
+                    color: '#FFFFFF',
+                    align: 'left',
+                    y: 20
+                }
+            }]
+    });
+
+        var chart2 = new Highcharts.Chart({
+        chart: {
+            renderTo:'container2',
+            type: 'column'
+        },
+        title: {
+            text: 'Total 5 customers based on commission last year'
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                rotation: -45
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'commission amount'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        series: [{
+            name: 'email',
+            data: [
+                {% for data in data2 %}
+                    ['{{ data.0 }}', {{ data.1 }}],
+                {% endfor %}
+            ],
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'left',
+                y: 20
+            }
+        }]
+});
+</script>
+<br><br>
+
+</body>
+</html>
+{% endblock %}

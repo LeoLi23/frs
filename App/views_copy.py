@@ -6,7 +6,6 @@ from django.urls import reverse
 from App.utils import *
 from django.db import connection
 import logging
-from dateutil.relativedelta import relativedelta
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -251,7 +250,6 @@ def login_booking_agent(request):
         form = BookingAgentLoginForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
-            agent_id = form.cleaned_data['agent_id']
             password = form.cleaned_data['password']
             hashed_password = hashed(password)
 
@@ -259,7 +257,6 @@ def login_booking_agent(request):
             cursor = connection.cursor()
             cursor.execute("select * from booking_agent where agent_email = %s;", email)
             check_email = cursor.fetchall()
-
             if not check_email:
                 return render(request, 'booking_agent/login.html',
                               {'form': form, 'message': "Email address doesn't exist!", 'need_to_signup': True})
@@ -274,9 +271,7 @@ def login_booking_agent(request):
                 print('log in successfully')
                 request.session['user'] = email
                 request.session['user_type'] = 'agent'
-                request.session['agent_id'] = agent_id
                 print('session ID: ', request.session['user'])
-                print('agent ID: ', request.session['agent_id'])
                 return HttpResponseRedirect(reverse('App:agent_index'))
             else:
                 return render(request, 'booking_agent/login.html',
@@ -489,60 +484,59 @@ def customer_spending(request):
         logging.info(customer_email)
         cursor = connection.cursor()
         sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
-                    where customer_email = %s and YEAR(purchase_date) = YEAR(CURDATE()) - 1"
-
-        cursor.execute(sql_str1, customer_email)
+                    where customer_email = '{customer_email}' and YEAR(purchase_date) = YEAR(CURDATE()) - 1"
+        cursor.execute(sql_str1)
         data1 = cursor.fetchall()[0][0]
-
-        today = dt.date.today()
-        delta = relativedelta(months=6)
-        six_months_prev = today - delta
         # last 6 months
         sql_str2 = f"select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
-                    where customer_email = %s and (purchase_date between %s and %s) \
+                    where customer_email = '{customer_email}' and (((MONTH(CURDATE()) - MONTH(purchase_date)) between 1 and 6) or (MONTH(CURDATE()) - MONTH(purchase_date)) <= -6) \
                     group by MONTH(purchase_date);"
-
-        cursor.execute(sql_str2, (customer_email, six_months_prev, today))
+        logging.info(sql_str2)
+        cursor.execute(sql_str2)
         res = cursor.fetchall()
-
+        logging.info(res)
         data2 = [[convert_to_month(r[0]), r[1]] for r in res]
         cursor.close()
         connection.close()
-
         logging.info(data2)
-
-        today = dt.date.today()
-        delta = relativedelta(months=6)
-        six_months_prev = today - delta
-        print('six_months_prev: ', six_months_prev)
-
-        return render(request, 'customer/spending.html',
-                      {'data1': data1, 'data2': data2, 'default': True, 'startDate': six_months_prev, 'endDate': today})
+        return render(request, 'customer/spending.html', {'data1': data1, 'data2': data2, 'monthDiff': 6})
 
     elif request.method == 'POST':
         cursor = connection.cursor()
-        startDate = request.POST.get('startDate')
-        endDate = request.POST.get('endDate')
+        startYear = int(request.POST.get('startYear'))
+        startMonth = int(request.POST.get('startMonth'))
+        endYear = int(request.POST.get('endYear'))
+        endMonth = int(request.POST.get('endMonth'))
 
-        args = (customer_email, startDate, endDate)
-        sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket where customer_email = %s and " \
-                   "(purchase_date between %s and %s);"
-        sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
-                    where customer_email = %s and (purchase_date between %s and %s) \
-                    group by MONTH(purchase_date);"
+        if startYear == endYear:
+            monthDiff = endMonth - startMonth + 1
+            sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
+                                    where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear}"
 
-        cursor.execute(sql_str1, args)
+            sql_str2 = f"select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+                                    where customer_email = '{customer_email}' and ({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} and YEAR(purchase_date) = {startYear} \
+                                    group by MONTH(purchase_date);"
+        else:
+            monthDiff = (endMonth + 12 * (endYear - startYear)) - startMonth + 1
+            temp_diff = endMonth + 1 - startMonth
+
+            sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
+                        where customer_email = '{customer_email}' and (({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff})"
+
+            sql_str2 = f"select MONTH(purchase_date), sold_price from customer_purchase natural join ticket \
+                        where customer_email = '{customer_email}' and (({endMonth + 1} - MONTH(purchase_date)) between 1 and {monthDiff} or ({endMonth + 1} - MONTH(purchase_date)) <= {temp_diff}) \
+                        group by MONTH(purchase_date), sold_price;"
+
+        cursor.execute(sql_str1)
         data1 = cursor.fetchall()[0][0]
-
-        cursor.execute(sql_str2, args)
+        cursor.execute(sql_str2)
         res = cursor.fetchall()
         data2 = [[convert_to_month(r[0]), r[1]] for r in res]
         cursor.close()
         connection.close()
         logging.info(data2)
 
-        return render(request, 'customer/spending.html',
-                      {'data1': data1, 'data2': data2, 'startDate': startDate, 'endDate': endDate, 'default': False})
+        return render(request, 'customer/spending.html', {'data1': data1, 'data2': data2, 'monthDiff': monthDiff})
 
 
 # Staff use cases
@@ -550,9 +544,9 @@ def customer_spending(request):
 def staff_index(request):
     cursor = connection.cursor()
     username = request.session['user']
-    airline_name = request.session['airline_name']
     cursor.execute(f"select * from staff where username = '{username}'")
     staff = cursor.fetchall()[0]
+    airline_name = staff[-1]
 
     if request.method == 'GET':
         cursor.execute(
@@ -788,8 +782,9 @@ def view_flight_ratings(request):
 def view_most_frequent_customers(request):
     airline_name = request.session['airline_name']
     cursor = connection.cursor()
+    args = (airline_name)
     sql_str = "select customer_email,count(*) from ticket natural join customer_purchase where airline_name=%s and YEAR(purchase_date) = YEAR(CURDATE()) - 1 group by customer_email order by count(*) desc limit 5"
-    cursor.execute(sql_str, airline_name)
+    cursor.execute(sql_str, args)
     customer_infos = cursor.fetchall()
     print("customer_infos: ", customer_infos)
     return render(request, 'staff/most_frequent_customers.html', {'customer_infos': customer_infos})
@@ -818,27 +813,47 @@ def view_flights_for_one_customer(request):
 @login_check_staff
 def view_reports_staff(request):
     if request.method == 'POST':
-        airline_name = request.session['airline_name']
         cursor = connection.cursor()
-        startDate = request.POST.get('startDate')
-        endDate = request.POST.get('endDate')
+        startYear = int(request.POST.get('startYear'))
+        startMonth = int(request.POST.get('startMonth'))
+        endYear = int(request.POST.get('endYear'))
+        endMonth = int(request.POST.get('endMonth'))
 
-        args = (airline_name, startDate, endDate)
-        # customer purchase
-        sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
-                    where airline_name = %s and (purchase_date between %s and %s);"
+        if startYear == endYear:
+            monthDiff = endMonth - startMonth + 1
+            args = (request.session['airline_name'], endMonth + 1, monthDiff, startYear)
+            # customer_purchase
+            sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s"
 
-        sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
-                               where airline_name = %s and (purchase_date between %s and %s) \
-                                group by MONTH(purchase_date) order by MONTH(purchase_date);"
+            sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+                                   where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
+            # agent_purchase
+            sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s"
 
-        # agent_purchase
-        sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
-                    where airline_name = %s and (purchase_date between %s and %s);"
+            sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s and YEAR(purchase_date) = %s \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
 
-        sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
-                               where airline_name = %s and (purchase_date between %s and %s) \
-                                group by MONTH(purchase_date) order by MONTH(purchase_date);"
+        else:
+            monthDiff = (endMonth + 12 * (endYear - startYear)) - startMonth + 1
+            temp_diff = endMonth + 1 - startMonth
+            args = (request.session['airline_name'], endMonth + 1, monthDiff, endMonth + 1, temp_diff)
+            sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+                        where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s)"
+
+            sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+                        where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s) group by MONTH(purchase_date) order by MONTH(purchase_date);"
+
+            # agent_purchase
+            sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s)"
+
+            sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
+                                    where airline_name = %s and (%s - MONTH(purchase_date)) between 1 and %s or ((%s - MONTH(purchase_date)) <= %s) \
+                                    group by MONTH(purchase_date) order by MONTH(purchase_date);"
 
         cursor.execute(sql_str1, args)
         data1_a = cursor.fetchall()[0][0]
@@ -867,25 +882,20 @@ def view_reports_staff(request):
 
         cursor.close()
         connection.close()
-        default = False
-        return render(request, 'staff/view_reports.html', locals())
 
-    if request.method == 'GET':
-        return render(request, 'staff/view_reports.html', {'default': True})
+        return render(request, 'staff/view_reports.html', locals())
+    return render(request, 'staff/view_reports.html')
 
 
 @login_check_staff
 def view_top_destinations(request):
     airline_name = request.session['airline_name']
     cursor = connection.cursor()
-
-    today = dt.date.today()
-    delta = relativedelta(months=3)
-    three_months_prev = today - delta
+    args = (airline_name)
 
     # customer purchase
     sql_str1 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
-              and (arrival_date between %s and %s) \
+              and (((MONTH(CURDATE()) - MONTH(arrival_date)) between 1 and 3) or (MONTH(CURDATE()) - MONTH(arrival_date)) <= -3) \
               group by A.city order by count(A.city) desc;"
     sql_str2 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
               and Year(arrival_date) = YEAR(curdate()) - 1 \
@@ -893,21 +903,21 @@ def view_top_destinations(request):
 
     # agent purchase
     sql_str3 = "select A.city as destination, count(A.city) as count from agent_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
-              and (arrival_date between %s and %s) \
+              and (((MONTH(CURDATE()) - MONTH(arrival_date)) between 1 and 3) or (MONTH(CURDATE()) - MONTH(arrival_date)) <= -3) \
               group by A.city order by count(A.city) desc;"
     sql_str4 = "select A.city as destination, count(A.city) as count from agent_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
               and Year(arrival_date) = YEAR(curdate()) - 1 \
               group by A.city order by count(A.city) desc;"
-    cursor.execute(sql_str1, (airline_name, three_months_prev, today))
+    cursor.execute(sql_str1, args)
     result1 = cursor.fetchall()
 
-    cursor.execute(sql_str2, airline_name)
+    cursor.execute(sql_str2, args)
     result2 = cursor.fetchall()
 
-    cursor.execute(sql_str3, (airline_name, three_months_prev, today))
+    cursor.execute(sql_str3, args)
     result3 = cursor.fetchall()
 
-    cursor.execute(sql_str4, airline_name)
+    cursor.execute(sql_str4, args)
     result4 = cursor.fetchall()
 
     # combine results from customer and agent purchase and sort in descending order
@@ -935,263 +945,12 @@ def logout_staff(request):
 # agent
 @login_check_agent
 def agent_index(request):
-    cursor = connection.cursor()
+    agent_email = request.session['user']
+    return render(request, 'booking_agent/index.html', {'agent': agent_email})
 
-    email = request.session['user']
-
-    sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
-              "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
-              f"where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
-    cursor.execute(sql_str, email)
-    flights = cursor.fetchall()
-    cursor.close()
-    connection.close()
-
-    print('flights: ', flights)
-
-    if len(flights) > 0 and len(flights[0]) > 0:
-        # history flights: arrive_datetime < now
-        # future flights: depart_datetime > now
-        history_flights = [flight for flight in flights
-                           if previous_than_today(flight[4], flight[5])]
-        future_flights = [flight for flight in flights
-                          if later_than_today(flight[2], flight[3])]
-        current_flight = [flight for flight in flights if
-                          flight not in history_flights and flight not in future_flights]
-        print(history_flights)
-        print(future_flights)
-        print(current_flight)
-
-        return render(request, 'booking_agent/index.html',
-                      {'history_flights': history_flights, 'future_flights': future_flights,
-                       'current_flights': current_flight})
-    else:
-        return render(request, 'booking_agent/index.html',
-                      {'message': "You didn't purchase any ticket yet!"})
-
-
-@login_check_agent
-def agent_search(request):
-    if request.method == 'POST':
-        form = FlightSearchForm(request.POST)
-        if form.is_valid():
-            SourceCity = form.cleaned_data['SourceCity']
-            DepartAirport = form.cleaned_data['DepartAirport']
-            DestinationCity = form.cleaned_data['DestinationCity']
-            ArriveAirport = form.cleaned_data['ArriveAirport']
-            Depart_date = form.cleaned_data['Depart_date']
-            Return_date = form.cleaned_data['Return_date']
-
-            # one way trip
-            if not Return_date:
-                sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                          "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                          f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
-                cursor = connection.cursor()
-                cursor.execute(sql_str)
-                flights = cursor.fetchall()
-                cursor.close()
-                connection.close()
-                if flights:
-                    print('one way flight search is successful')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'flights': flights,
-                                                                    'trip_count': 1})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'message': 'No flights available!'})
-
-            # round trip
-            else:
-                sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                           f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
-
-                sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{ArriveAirport}' and D.city = '{DestinationCity}' and " \
-                           f"flight.arrive_airport_name = '{DepartAirport}' and A.city = '{SourceCity}' and depart_date = '{Return_date}'"
-
-                cursor = connection.cursor()
-
-                cursor.execute(sql_str1)
-                flight_first = cursor.fetchall()
-
-                cursor.execute(sql_str2)
-                flight_second = cursor.fetchall()
-
-                cursor.close()
-                connection.close()
-
-                if flight_first and flight_second:
-                    print("round trip flight search is successful")
-                    return render(request, 'booking_agent/search.html', {'form': form,
-                                                                         'sourceCity': SourceCity,
-                                                                         'destinationCity': DestinationCity,
-                                                                         'flight_first': flight_first,
-                                                                         'flight_second': flight_second,
-                                                                         'trip_count': 2})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'booking_agent/search.html', {'form': form,
-                                                                         'message': 'No flights available!'})
-    else:
-        form = FlightSearchForm(request.POST)
-    return render(request, 'booking_agent/search.html', {'form': form})
-
-
-@login_check_agent
-def agent_purchase(request):
-    if request.method == 'POST':
-        form = CustomerPurchaseForm(request.POST)
-        if form.is_valid():
-            agent_email = request.session['user']
-            agent_id = request.session['agent_id']
-
-            flight_num = request.POST.get('flight_num')
-            logging.info(flight_num)
-            customer_email = form.cleaned_data['email']
-            card_type = form.cleaned_data['card_type']
-            card_num = form.cleaned_data['card_num']
-            name_on_card = form.cleaned_data['name_on_card']
-            expire_at = form.cleaned_data['expire_at']
-            purchase_date = dt.date.today()
-            purchase_time = dt.datetime.now().time()
-            t_id = generate_ticket_id(flight_num)
-            print('generated_t_id: ', t_id)
-
-            cursor = connection.cursor()
-            args = (
-                agent_email, agent_id, t_id, customer_email, card_type, card_num, name_on_card, expire_at,
-                purchase_date,
-                purchase_time)
-            sql_str1 = f"Insert into agent_purchase(agent_email, agent_id, ticket_id,customer_email,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-            cursor.execute(sql_str1, args)
-
-            sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
-                        where flight.airplane_id = airplane.ID and ticket.ticket_id = %s"
-            cursor.execute(sql_str2, t_id)
-            seats, capacity, ID = cursor.fetchall()[0]
-            print('seats: ', seats, 'capacity: ', capacity)
-
-            # check seats
-            if seats > 0:
-                if seats <= capacity * 0.3:
-                    # 70% of tickets have been booked, 20 % increase in ticket price
-                    print("Sorry we need to increase the ticket price")
-                    cursor.execute(
-                        "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
-                # update seats
-                cursor.execute(f"update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
-                cursor.close()
-                connection.close()
-                print("Ticket successful purchased!")
-                print("Remaining seats are ", seats - 1)
-                return HttpResponseRedirect(reverse('App:agent_index'))
-            else:
-                warning_msg = "Sorry, the airplane has reached its capacity!"
-                return render(request, 'booking_agent/purchase.html', locals())
-    else:
-        form = CustomerPurchaseForm()
-    return render(request, 'booking_agent/purchase.html', locals())
-
-
-@login_check_agent
-def agent_commission(request):
-    agent_email, agent_id = request.session['user'], request.session['agent_id']
-    if request.method == 'GET':
-        cursor = connection.cursor()
-        args = (agent_email, agent_id)
-        sql_str1 = "select SUM(0.1 * sold_price) as commision from agent_purchase natural join ticket \
-                    where agent_email = %s and agent_id = %s \
-                    and MONTH(purchase_date) = MONTH(CURDATE()) \
-                    or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
-
-        sql_str2 = "select AVG(0.1 * sold_price) as commision from agent_purchase natural join ticket \
-                            where agent_email = %s and agent_id = %s \
-                            and MONTH(purchase_date) = MONTH(CURDATE()) \
-                            or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
-
-        sql_str3 = "select COUNT(ticket_id) as commision from agent_purchase natural join ticket \
-                                    where agent_email = %s and agent_id = %s \
-                                    and MONTH(purchase_date) = MONTH(CURDATE()) \
-                                    or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
-        cursor.execute(sql_str1, args)
-        total_commission = cursor.fetchall()[0][0]
-
-        cursor.execute(sql_str2, args)
-        avg_commission = cursor.fetchall()[0][0]
-
-        cursor.execute(sql_str3, args)
-        ticket_count = cursor.fetchall()[0][0]
-        default = True
-        cursor.close()
-        connection.close()
-        return render(request, 'booking_agent/view_commissions.html', locals())
-
-    elif request.method == 'POST':
-        cursor = connection.cursor()
-        startDate = request.POST.get('startDate')
-        endDate = request.POST.get('endDate')
-
-        sql_str1 = "select SUM(0.1 * sold_price) as commission from agent_purchase natural join ticket " \
-                   "where agent_email = %s and agent_id = %s and (purchase_date between %s and %s);"
-
-        sql_str2 = "select AVG(0.1 * sold_price) as commission from agent_purchase natural join ticket " \
-                   "where agent_email = %s and agent_id = %s and (purchase_date between %s and %s);"
-
-        sql_str3 = "select COUNT(0.1 * sold_price) as commission from agent_purchase natural join ticket " \
-                   "where agent_email = %s and agent_id = %s and (purchase_date between %s and %s);"
-
-        args = (agent_email, agent_id, startDate, endDate)
-
-        cursor.execute(sql_str1, args)
-        total_commission = cursor.fetchall()[0][0]
-
-        cursor.execute(sql_str2, args)
-        avg_commission = cursor.fetchall()[0][0]
-
-        cursor.execute(sql_str3, args)
-        ticket_count = cursor.fetchall()[0][0]
-        default = False
-        cursor.close()
-        connection.close()
-        return render(request, 'booking_agent/view_commissions.html', locals())
-
-
-@login_check_agent
-def view_top_customers(request):
-    agent_email, agent_id = request.session['user'], request.session['agent_id']
-    cursor = connection.cursor()
-
-    today = dt.date.today()
-    delta = relativedelta(months=6)
-    six_months_prev = today - delta
-
-    sql_str1 = "select customer_email, COUNT(ticket_id) from agent_purchase where agent_email = %s and agent_id = %s and (purchase_date between %s and %s) " \
-               "group by customer_email order by COUNT(ticket_id) desc LIMIT 5;"
-
-    sql_str2 = "select customer_email, SUM(sold_price * 0.1) as amount from agent_purchase natural join ticket " \
-               "where agent_email = %s and agent_id = %s and YEAR(purchase_date) = YEAR(CURDATE()) -1 group by customer_email order by amount desc LIMIT 5;"
-
-    cursor.execute(sql_str1, (agent_email, agent_id, six_months_prev, today))
-    data1 = cursor.fetchall()
-
-    cursor.execute(sql_str2, (agent_email, agent_id))
-    data2 = cursor.fetchall()
-
-    print("top_five_tickets_count: ", data1)
-    print("top_five_commission: ", data2)
-
-    return render(request, 'booking_agent/view_top_customers.html', locals())
 
 
 @login_check_agent
 def logout_agent(request):
     del request.session['user']
-    del request.session['agent_id']
     return HttpResponseRedirect(reverse('App:login_booking_agent'))

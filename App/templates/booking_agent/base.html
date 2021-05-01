@@ -12,35 +12,34 @@
   </head>
   <body>
         <header class="site-header">
-          <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-            <div class="container">
-              <a class="navbar-brand mr-4" href="{% url "App:main" %}">Home</a>
-              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-              </button>
+            <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+                <div class = "container">
+                  <a class="navbar-brand" href="{% url 'App:agent_index' %}">Home</a>
+                  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav">
+                        <li class="nav-item active">
+                        <a class="nav-link" href="{% url "App:agent_search" %}">Search <span class="sr-only"></span></a>
+                      </li>
 
-              <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav">
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Login</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{% url 'App:login_customer' %}">Customer</a>
-                      <a class="dropdown-item" href="{% url 'App:login_booking_agent' %}">Booking Agent</a>
-                      <a class="dropdown-item" href="{% url 'App:login_staff' %}">Staff</a>
-                    </div>
-                  </li>
-                  <li class="nav-item dropdown">
-                      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Register</a>
-                      <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{% url 'App:register_customer' %}">Customer</a>
-                      <a class="dropdown-item" href="{% url 'App:register_booking_agent' %}">Booking Agent</a>
-                      <a class="dropdown-item" href="{% url 'App:register_staff' %}">Staff</a>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </nav>
+                        <li class="nav-item active">
+                        <a class="nav-link" href="{% url "App:agent_commission" %}">View commissions <span class="sr-only"></span></a>
+                      </li>
+
+                        <li class="nav-item active">
+                        <a class="nav-link" href="{% url "App:agent_top_customers" %}">View Top Customers <span class="sr-only"></span></a>
+                      </li>
+
+                        <li class="nav-item active">
+                        <a class="nav-link" href="{% url "App:logout_agent" %}">Logout <span class="sr-only"></span></a>
+                      </li>
+
+                    </ul>
+                  </div>
+                </div>
+            </nav>
         </header>
     <div class="container">
         {% block content %} {% endblock%}
