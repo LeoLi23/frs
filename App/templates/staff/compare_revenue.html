@@ -1,0 +1,99 @@
+{% extends 'staff/base.html' %}
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"><link rel="icon" href="https://jscdn.com.cn/highcharts/images/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="\static\staff\piechart.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/themes/sand-signika.js"></script>
+    <title>Revenue Comparison</title>
+</head>
+<body>
+<br><br><br><br>
+<div id="container1" style="min-width:600px;height:600px"> </div>
+<div id="container2" style="min-width:600px;height:600px"> </div>
+
+<script>
+    var chart1 = new Highcharts.Chart({
+    chart: {
+        renderTo: "container1",
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: "Direct sales against Indirect sales in the last month"
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f}%'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [
+            {
+                name: 'direct sales',
+                y: {{res1}}
+            },
+            {
+                name: 'indirect sales',
+                y: {{ res2 }}
+            }
+        ]
+    }]
+});
+
+    var chart2 = new Highcharts.Chart({
+    chart: {
+        renderTo: "container2",
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: "Direct sales against Indirect sales in the last year"
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f}%'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [
+            {
+                name: 'direct sales',
+                y: {{res3}}
+            },
+            {
+                name: 'indirect sales',
+                y: {{ res4 }}
+            }
+        ]
+    }]
+});
+</script>
+</body>
+</html>
+{% endblock %}

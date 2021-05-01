@@ -925,6 +925,73 @@ def view_top_destinations(request):
 
 
 @login_check_staff
+def view_top_booking_agents(request):
+    airline_name = request.session['airline_name']
+    cursor = connection.cursor()
+
+    today = dt.date.today()
+    delta1 = relativedelta(months=1)
+    delta2 = relativedelta(months=12)
+    past_month = today - delta1
+    past_year = today - delta2
+
+    # past month and past year
+    sql_str1 = "select agent_email, COUNT(ticket_id) from agent_purchase natural join ticket where airline_name = %s and (purchase_date between %s and %s) " \
+               "group by agent_email order by COUNT(ticket_id) desc LIMIT 5;"
+
+    # last year
+    sql_str2 = "select agent_email, SUM(sold_price * 0.1) as amount from agent_purchase natural join ticket " \
+               "where airline_name = %s and YEAR(purchase_date) = YEAR(CURDATE()) - 1 group by agent_email order by amount desc LIMIT 5;"
+
+    cursor.execute(sql_str1, (airline_name, past_month, today))
+    data1 = cursor.fetchall()
+
+    cursor.execute(sql_str1, (airline_name, past_year, today))
+    data2 = cursor.fetchall()
+
+    cursor.execute(sql_str2, airline_name)
+    data3 = cursor.fetchall()
+
+    return render(request, 'staff/view_top_booking_agents.html', locals())
+
+
+@login_check_staff
+def revenue_comparison_staff(request):
+    airline_name = request.session['airline_name']
+    cursor = connection.cursor()
+
+    # last month
+    sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket where airline_name = %s and MONTH(purchase_date) = MONTH(CURDATE()) - 1;"
+    sql_str2 = "select SUM(sold_price) from agent_purchase natural join ticket where airline_name = %s and MONTH(purchase_date) = MONTH(CURDATE()) - 1;"
+    # last year
+    sql_str3 = "select SUM(sold_price) from customer_purchase natural join ticket where airline_name = %s and YEAR(purchase_date) = YEAR(CURDATE()) - 1;"
+    sql_str4 = "select SUM(sold_price) from agent_purchase natural join ticket where airline_name = %s and YEAR(purchase_date) = YEAR(CURDATE()) - 1;"
+
+    cursor.execute(sql_str1, airline_name)
+    res1 = cursor.fetchall()[0][0]
+    cursor.execute(sql_str2, airline_name)
+    res2 = cursor.fetchall()[0][0]
+
+    if res1 is None:
+        res1 = 0
+    if res2 is None:
+        res2 = 0
+
+    cursor.execute(sql_str3, airline_name)
+    res3 = cursor.fetchall()[0][0]
+
+    cursor.execute(sql_str4, airline_name)
+    res4 = cursor.fetchall()[0][0]
+
+    if res3 is None:
+        res3 = 0
+    if res4 is None:
+        res4 = 0
+
+    return render(request, 'staff/compare_revenue.html', locals())
+
+
+@login_check_staff
 def logout_staff(request):
     del request.session['user']
     del request.session['airline_name']

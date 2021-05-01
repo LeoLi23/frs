@@ -33,6 +33,8 @@ urlpatterns = [
          name='view_flights_for_one_customer'),
     path('staff/view_reports', views.view_reports_staff, name='view_reports_staff'),
     path('staff/view_top_destinations', views.view_top_destinations, name='view_top_destinations'),
+    path('staff/view_top_agents/', views.view_top_booking_agents, name='view_top_booking_agents'),
+    path('staff/revenue_comparison/', views.revenue_comparison_staff, name = "revenue_comparison_staff"),
 
     path('booking_agent/register/', views.register_booking_agent, name='register_booking_agent'),
     path('booking_agent/login/', views.login_booking_agent, name='login_booking_agent'),

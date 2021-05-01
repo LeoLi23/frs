@@ -1,0 +1,79 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'staff/piechart.css' %}">
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View top booking agents</title>
+</head>
+<body>
+<br><br><br><br>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <h2> Top booking agents past month </h2> <br>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">email</th>
+                                    <th scope="col">purchase times</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for info in data1 %}
+                                            <tr>
+                                            {% for item in info %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                    <br><br><br>
+                    <h2> Top booking agents past year </h2> <br>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">email</th>
+                                    <th scope="col">purchase times</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for info in data2 %}
+                                            <tr>
+                                            {% for item in info %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                     <br><br><br>
+                    <h2> Top booking agents in the last year </h2> <br>
+                    <table class="table table-bordered table-light table-mid">
+                              <thead class="thead-light">
+                                <tr>
+                                  <th scope="col">email</th>
+                                    <th scope="col">purchase times</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                        {% for info in data3 %}
+                                            <tr>
+                                            {% for item in info %}
+                                                <td> {{ item }} </td>
+                                            {% endfor %}
+                                        {% endfor %}
+                              </tbody>
+                          </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% endblock %}
