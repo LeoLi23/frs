@@ -1,8 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
-from django.contrib import messages
 from .forms import *
-from django.urls import reverse
 from App.utils import *
 from django.db import connection
 import logging
@@ -33,7 +31,6 @@ def info(request):
                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                           f" and flight.depart_airport_name = %s and D.city = %s and " \
                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
-                logging.info(sql_str)
                 cursor = connection.cursor()
                 cursor.execute(sql_str, args)
                 flights = cursor.fetchall()
@@ -109,13 +106,15 @@ def register_customer(request):
             passport_expire = form.cleaned_data['passport_expire']
             date_of_birth = form.cleaned_data['date_of_birth']
 
-            hashed_password = hashed(password)
+            password = hashed(password)
 
-            sql_str = f"insert into customer(email,name,password,building_num,street,city,state,phone_num,passport_num,passport_country,passport_expire,date_of_birth) " + \
-                      f"values ('{email}','{name}','{hashed_password}','{building_num}','{street}','{city}','{state}','{phone_num}','{passport_num}','{passport_country}','{passport_expire}','{date_of_birth}')"
-            print(sql_str)
+            args = (email, name, password, building_num, street, city, state, phone_num, passport_num, passport_country,
+                    passport_expire, date_of_birth)
+            sql_str = "Insert into customer(email,name,password,building_num,street,city,state,phone_num,passport_num,passport_country,passport_expire,date_of_birth) " + \
+                      "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+
             cursor = connection.cursor()
-            cursor.execute(sql_str)
+            cursor.execute(sql_str, args)
             cursor.close()
             connection.close()
 
@@ -138,13 +137,17 @@ def register_staff(request):
             date_of_birth = form.cleaned_data['date_of_birth']
             airline_name = form.cleaned_data['airline_name']
             password = hashed(password)
-            sql_str = f"insert into staff(username,password,f_name,l_name,date_of_birth,airline_name) values \
-                        ('{username}','{password}','{f_name}','{l_name}','{date_of_birth}','{airline_name}')"
-            print(sql_str)
+
+            args = (username, password, f_name, l_name, date_of_birth, airline_name)
+
+            sql_str = "Insert into staff(username,password,f_name,l_name,date_of_birth,airline_name) values \
+                        (%s, %s, %s, %s, %s, %s);"
+
             cursor = connection.cursor()
-            cursor.execute(sql_str)
+            cursor.execute(sql_str, args)
             cursor.close()
             connection.close()
+
             logging.info("Successfully created a staff!")
             return HttpResponseRedirect(reverse('App:login_staff'))
     else:
@@ -164,7 +167,7 @@ def register_booking_agent(request):
 
             cursor = connection.cursor()
             args = (agent_email, agent_id, hashed_password)
-            sql_str = "insert into booking_agent(agent_email, agent_id, agent_password) VALUES(%s, %s, %s);"
+            sql_str = "Insert into booking_agent(agent_email, agent_id, agent_password) VALUES(%s, %s, %s);"
             cursor.execute(sql_str, args)
 
             return HttpResponseRedirect(reverse('App:login_booking_agent'))
@@ -182,14 +185,14 @@ def login_customer(request):
             password = hashed(password)
 
             cursor = connection.cursor()
-            cursor.execute(f"select email from customer where email = '{email}'")
+            cursor.execute("select email from customer where email = %s;", email)
 
             check_email = cursor.fetchall()
             if not check_email:
                 return render(request, 'customer/login.html',
                               {'form': form, 'message': "Email address doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute(f"select email from customer where email = '{email}' and password = '{password}' ")
+            cursor.execute("select email from customer where email = %s and password = %s;", (email, password))
             check_matches = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -218,13 +221,14 @@ def login_staff(request):
             password = form.cleaned_data['password']
             password = hashed(password)
 
-            cursor.execute(f"select * from staff where username = '{username}'")
+            cursor.execute(f"select * from staff where username = %s;", username)
             check_username = cursor.fetchall()
             if not check_username:
                 return render(request, 'staff/login.html',
                               {'form': form, 'message': "username doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute(f"select airline_name from staff where username = '{username}' and password = '{password}'")
+            cursor.execute(f"select airline_name from staff where username = %s and password = %s;",
+                           (username, password))
             check_matches = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -294,13 +298,13 @@ def customer_index(request):
 
     email = request.session['user']  # get email (pk) from session
 
-    cursor.execute(f"select name from customer where email = '{email}'")
+    cursor.execute("select name from customer where email = %s;", email)
     customer_name = cursor.fetchall()[0][0]
 
-    sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
+    sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
               "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
-              f"where customer.email = customer_purchase.customer_email and email = '{email}' and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name"
-    cursor.execute(sql_str)
+              "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name"
+    cursor.execute(sql_str, email)
     flights = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -341,12 +345,13 @@ def customer_search(request):
 
             # one way trip
             if not Return_date:
+                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
                 sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                          f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                          f" and flight.depart_airport_name = %s and D.city = %s and " \
+                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
                 cursor = connection.cursor()
-                cursor.execute(sql_str)
+                cursor.execute(sql_str, args)
                 flights = cursor.fetchall()
                 cursor.close()
                 connection.close()
@@ -362,22 +367,24 @@ def customer_search(request):
 
             # round trip
             else:
+                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
                 sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                           f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
 
                 sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{ArriveAirport}' and D.city = '{DestinationCity}' and " \
-                           f"flight.arrive_airport_name = '{DepartAirport}' and A.city = '{SourceCity}' and depart_date = '{Return_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
 
                 cursor = connection.cursor()
 
-                cursor.execute(sql_str1)
+                cursor.execute(sql_str1, args1)
                 flight_first = cursor.fetchall()
 
-                cursor.execute(sql_str2)
+                cursor.execute(sql_str2, args2)
                 flight_second = cursor.fetchall()
 
                 cursor.close()
@@ -418,13 +425,14 @@ def customer_purchase(request):
             print('generated_t_id: ', t_id)
 
             cursor = connection.cursor()
-            sql_str1 = f"Insert into customer_purchase(customer_email,ticket_id,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
-                       VALUES ('{customer_email}','{t_id}','{card_type}','{card_num}','{name_on_card}','{expire_at}','{purchase_date}','{purchase_time}')"
-            cursor.execute(sql_str1)
+            args = (customer_email, t_id, card_type, card_num, name_on_card, expire_at, purchase_date, purchase_time)
+            sql_str1 = "Insert into customer_purchase(customer_email,ticket_id,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time) \
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
+            cursor.execute(sql_str1, args)
 
             sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
-                        where flight.airplane_id = airplane.ID and ticket.ticket_id = '{t_id}'"
-            cursor.execute(sql_str2)
+                        where flight.airplane_id = airplane.ID and ticket.ticket_id = %s;"
+            cursor.execute(sql_str2, t_id)
             seats, capacity, ID = cursor.fetchall()[0]
             print('seats: ', seats, 'capacity: ', capacity)
 
@@ -434,12 +442,12 @@ def customer_purchase(request):
                     # 70% of tickets have been booked, 20 % increase in ticket price
                     print("Sorry we need to increase the ticket price")
                     cursor.execute(
-                        f"update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = '{t_id}'")
+                        "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
                 # update seats
-                cursor.execute(f"update airplane a set a.seats = a.seats - 1 where a.ID = '{ID}'")
+                cursor.execute("update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
                 cursor.close()
                 connection.close()
-                print("Ticket successful purchased!")
+                print("Ticket successfully purchased!")
                 print("Remaining seats are ", seats - 1)
                 return HttpResponseRedirect(reverse('App:customer_index'))
             else:
@@ -466,9 +474,10 @@ def customer_comment(request):
         depart_time = convert_str_to_time(depart_time)
 
         cursor = connection.cursor()
+        args = (customer_email, airline_name, flight_num, depart_date, depart_time, comment, rating)
         sql_str = "Insert into rate(customer_email,airline_name,flight_num,depart_date,depart_time,comment,rating) " + \
-                  f"VALUES('{customer_email}','{airline_name}','{flight_num}','{depart_date}','{depart_time}','{comment}','{rating}')"
-        cursor.execute(sql_str)
+                  "VALUES(%s,%s,%s,%s,%s,%s,%s);"
+        cursor.execute(sql_str, args)
         cursor.close()
         connection.close()
         return HttpResponseRedirect(reverse('App:customer_index'))
@@ -511,9 +520,6 @@ def customer_spending(request):
 
         logging.info(data2)
 
-        today = dt.date.today()
-        delta = relativedelta(months=6)
-        six_months_prev = today - delta
         print('six_months_prev: ', six_months_prev)
 
         return render(request, 'customer/spending.html',
@@ -551,14 +557,14 @@ def staff_index(request):
     cursor = connection.cursor()
     username = request.session['user']
     airline_name = request.session['airline_name']
-    cursor.execute(f"select * from staff where username = '{username}'")
+    cursor.execute("select * from staff where username = %s;", username)
     staff = cursor.fetchall()[0]
 
     if request.method == 'GET':
         cursor.execute(
-            f"select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport "
-            f" from flight,airport as D,airport as A where airline_name = '{airline_name}' and flight.arrive_airport_name = A.name "
-            f"and flight.depart_airport_name = D.name")
+            "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport "
+            " from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name "
+            "and flight.depart_airport_name = D.name", airline_name)
         flights = cursor.fetchall()
         print(flights)
         cursor.close()
@@ -584,11 +590,14 @@ def staff_index(request):
         sourceAirport = request.POST.get('sourceAirport')
         arriveAirport = request.POST.get('arriveAirport')
 
+        args = (airline_name, sourceCity, sourceAirport, arriveCity, arriveAirport, startDate, endDate)
+
         sql_str = f"select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport \
-                from flight,airport as D,airport as A where airline_name = '{airline_name}' and flight.arrive_airport_name = A.name \
-             and flight.depart_airport_name = D.name and D.city = '{sourceCity}' and depart_airport_name = '{sourceAirport}' and A.city = '{arriveCity}' and arrive_airport_name = '{arriveAirport}' \
-             and depart_date between '{startDate}' and '{endDate}'"
-        cursor.execute(sql_str)
+                from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
+             and flight.depart_airport_name = D.name and D.city = %s and depart_airport_name = %s and A.city = %s and arrive_airport_name = %s \
+             and depart_date between %s and %s;"
+
+        cursor.execute(sql_str, args)
 
         flights = cursor.fetchall()
         cursor.close()
@@ -627,18 +636,24 @@ def view_customers_staff(request):
         cursor = connection.cursor()
         # customer-purchase
         sql_str1 = "select c.name from flight natural join ticket natural join customer_purchase as cp,customer as c where " \
-                   f"cp.customer_email = c.email and flight.flight_num = '{flight_num}'"
+                   f"cp.customer_email = c.email and flight.flight_num = %s"
         # agent_purchase
         sql_str2 = "select c.name from flight natural join ticket natural join agent_purchase as ap, customer as c where " \
-                   f"ap.customer_email = c.email and flight.flight_num = '{flight_num}'"
+                   f"ap.customer_email = c.email and flight.flight_num = %s"
 
-        cursor.execute(sql_str1)
+        cursor.execute(sql_str1, flight_num)
         customer_names = cursor.fetchall()
-        cursor.execute(sql_str2)
+        cursor.execute(sql_str2, flight_num)
         agent_customer_names = cursor.fetchall()
 
-        if agent_customer_names:
+        print('customers:', customer_names)
+        print('agent customers: ', agent_customer_names)
+
+        if agent_customer_names and customer_names:
             customer_names += agent_customer_names
+        elif not customer_names:  # if customer names are None, replace it with agent purchase names
+            customer_names = agent_customer_names
+
         logging.info(customer_names)
 
         if len(customer_names) > 0 and len(customer_names[0]) > 0:
@@ -655,7 +670,7 @@ def create_flight_staff(request):
         return HttpResponse("You are not authorized to perform this action!")
     if request.method == 'GET':
         cursor = connection.cursor()
-        cursor.execute(f"select distinct airplane_id from flight where airline_name = '{airline_name}'")
+        cursor.execute("select distinct airplane_id from flight where airline_name = %s", airline_name)
         airplane_ids = cursor.fetchall()
 
         cursor.execute("select name from airport")
@@ -676,9 +691,13 @@ def create_flight_staff(request):
         depart_airport_name = request.POST.get('depart_airport_name')
 
         cursor = connection.cursor()
+        args = (
+            airline_name, flight_num, depart_date, depart_time, arrive_date, arrive_time, airplane_id, base_price,
+            status,
+            arrive_airport_name, depart_airport_name)
         sql_str = "Insert into flight(airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,airplane_id,base_price,status,arrive_airport_name,depart_airport_name)" \
-                  f"VALUES ('{airline_name}','{flight_num}','{depart_date}','{depart_time}','{arrive_date}','{arrive_time}','{airplane_id}','{base_price}','{status}','{arrive_airport_name}','{depart_airport_name}')"
-        cursor.execute(sql_str)
+                  f"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql_str, args)
         return HttpResponseRedirect(reverse('App:staff_index'))
 
 
@@ -700,15 +719,16 @@ def change_flight_status(request):
         depart_time = convert_str_to_time(depart_time)
 
         cursor = connection.cursor()
-        sql_str = f"UPDATE flight SET status = '{newStatus}' WHERE airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
-        cursor.execute(sql_str)
+        args = (newStatus, airline_name, flight_num, depart_date, depart_time)
+        sql_str = f"UPDATE flight SET status = %s WHERE airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s;"
+        cursor.execute(sql_str, args)
         cursor.close()
         connection.close()
         return HttpResponseRedirect(reverse('App:staff_index'))
 
 
 @login_check_staff
-def add_airplane_staff(request):
+def add_airplane(request):
     if request.session['user_type'] != 'staff':
         return HttpResponse("You are not authorized to perform this action!")
 
@@ -718,11 +738,11 @@ def add_airplane_staff(request):
     if request.method == 'POST':
         airplane_id = request.POST.get('airplane_id')
         seats = int(request.POST.get('seats'))
-
+        args = (airplane_id, airline_name, seats, seats)
         cursor.execute(
-            f"INSERT INTO airplane(ID,airline_name,seats,capacity) VALUES('{airplane_id}','{airline_name}',{seats},{seats})")
+            "INSERT INTO airplane(ID,airline_name,seats,capacity) VALUES(%s, %s, %s, %s)", args)
 
-    cursor.execute(f"select ID,capacity from airplane where airline_name = '{airline_name}'")
+    cursor.execute("select ID,capacity from airplane where airline_name = %s", airline_name)
     airplane_info = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -739,9 +759,9 @@ def add_airport_staff(request):
         airport_name = request.POST.get('airport_name')
         airport_city = request.POST.get('airport_city')
 
-        cursor.execute(f"INSERT INTO airport(name,city) VALUES('{airport_name}','{airport_city}')")
+        cursor.execute("INSERT INTO airport(name,city) VALUES(%s, %s)", (airport_name, airport_city))
 
-    cursor.execute("select * from airport order by city ASC")
+    cursor.execute("select * from airport order by city ASC;")
     airports = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -760,10 +780,12 @@ def view_flight_ratings(request):
         depart_date = convert_str_to_date(depart_date)
         depart_time = convert_str_to_time(depart_time)
 
-        sql_str1 = f"select AVG(rating) from rate natural join flight where airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
-        sql_str2 = f"select comment,rating from rate natural join flight where airline_name = '{airline_name}' and flight_num = '{flight_num}' and depart_date = '{depart_date}' and depart_time = '{depart_time}'"
+        args = (airline_name, flight_num, depart_date, depart_time)
 
-        cursor.execute(sql_str1)
+        sql_str1 = f"select AVG(rating) from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
+        sql_str2 = f"select comment,rating from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
+
+        cursor.execute(sql_str1, args)
         avg_rating = cursor.fetchall()
 
         null_msg = False
@@ -773,7 +795,7 @@ def view_flight_ratings(request):
         else:
             avg_rating = round(avg_rating[0][0], 2)
 
-        cursor.execute(sql_str2)
+        cursor.execute(sql_str2, args)
         infos = cursor.fetchall()
 
         cursor.close()
@@ -1051,12 +1073,13 @@ def agent_search(request):
 
             # one way trip
             if not Return_date:
+                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
                 sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                          f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                          f" and flight.depart_airport_name = %s and D.city = %s and " \
+                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
                 cursor = connection.cursor()
-                cursor.execute(sql_str)
+                cursor.execute(sql_str, args)
                 flights = cursor.fetchall()
                 cursor.close()
                 connection.close()
@@ -1072,22 +1095,25 @@ def agent_search(request):
 
             # round trip
             else:
+                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
+
                 sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{DepartAirport}' and D.city = '{SourceCity}' and " \
-                           f"flight.arrive_airport_name = '{ArriveAirport}' and A.city = '{DestinationCity}' and depart_date = '{Depart_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
                 sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
                            "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = '{ArriveAirport}' and D.city = '{DestinationCity}' and " \
-                           f"flight.arrive_airport_name = '{DepartAirport}' and A.city = '{SourceCity}' and depart_date = '{Return_date}'"
+                           f" and flight.depart_airport_name = %s and D.city = %s and " \
+                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
                 cursor = connection.cursor()
 
-                cursor.execute(sql_str1)
+                cursor.execute(sql_str1, args1)
                 flight_first = cursor.fetchall()
 
-                cursor.execute(sql_str2)
+                cursor.execute(sql_str2, args2)
                 flight_second = cursor.fetchall()
 
                 cursor.close()
@@ -1172,21 +1198,24 @@ def agent_commission(request):
     agent_email, agent_id = request.session['user'], request.session['agent_id']
     if request.method == 'GET':
         cursor = connection.cursor()
-        args = (agent_email, agent_id)
+
+        today = dt.date.today()
+        delta = relativedelta(days=30)
+        thirty_days_prev = today - delta
+
+        args = (agent_email, agent_id, thirty_days_prev, today)
+
         sql_str1 = "select SUM(0.1 * sold_price) as commision from agent_purchase natural join ticket \
                     where agent_email = %s and agent_id = %s \
-                    and MONTH(purchase_date) = MONTH(CURDATE()) \
-                    or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
+                    and (purchase_date between %s and %s);"
 
         sql_str2 = "select AVG(0.1 * sold_price) as commision from agent_purchase natural join ticket \
                             where agent_email = %s and agent_id = %s \
-                            and MONTH(purchase_date) = MONTH(CURDATE()) \
-                            or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
+                            and (purchase_date between %s and %s);"
 
         sql_str3 = "select COUNT(ticket_id) as commision from agent_purchase natural join ticket \
                                     where agent_email = %s and agent_id = %s \
-                                    and MONTH(purchase_date) = MONTH(CURDATE()) \
-                                    or (MONTH(purchase_date) = MONTH(CURDATE()) - 1 and DAY(purchase_date) between DAY(CURDATE()) and 30);"
+                                    and (purchase_date between %s and %s);"
         cursor.execute(sql_str1, args)
         total_commission = cursor.fetchall()[0][0]
 
@@ -1242,6 +1271,7 @@ def view_top_customers(request):
     sql_str1 = "select customer_email, COUNT(ticket_id) from agent_purchase where agent_email = %s and agent_id = %s and (purchase_date between %s and %s) " \
                "group by customer_email order by COUNT(ticket_id) desc LIMIT 5;"
 
+    # last year
     sql_str2 = "select customer_email, SUM(sold_price * 0.1) as amount from agent_purchase natural join ticket " \
                "where agent_email = %s and agent_id = %s and YEAR(purchase_date) = YEAR(CURDATE()) -1 group by customer_email order by amount desc LIMIT 5;"
 
