@@ -1,5 +1,7 @@
 import hashlib
 import datetime as dt
+import time
+import shortuuid
 from django.db import connection
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -164,3 +166,28 @@ def top_destination_all_list(c_list, a_list):
 
     res = sorted(map.items(), key=lambda x: x[1], reverse=True)
     return res
+
+
+def create_tickets(sold_price, airline_name, flight_num, depart_date, depart_time, capacity):
+    cursor = connection.cursor()
+    sql_str = "INSERT INTO ticket(ticket_id, sold_price, airline_name, flight_num, depart_date, depart_time) VALUES(%s, %s, %s, %s, %s, %s);"
+
+    param = []
+    t_ids = {'id': []}
+    for i in range(capacity):
+        t_id = shortuuid.ShortUUID().random(length=11)
+        if t_id not in t_ids['id']:
+            print(t_id)
+            t_ids['id'].append(t_id)
+            param.append([t_id, sold_price, airline_name, flight_num, depart_date, depart_time])
+            time.sleep(0.01)
+        else:
+            continue
+    try:
+        cursor.executemany(sql_str, param)
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(e)
+        cursor.close()
+        connection.close()

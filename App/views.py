@@ -691,13 +691,19 @@ def create_flight_staff(request):
         depart_airport_name = request.POST.get('depart_airport_name')
 
         cursor = connection.cursor()
+        cursor.execute("select capacity from airplane where airline_name = %s and ID = %s", (airline_name, airplane_id))
+        capacity = cursor.fetchall()[0][0]
+
         args = (
             airline_name, flight_num, depart_date, depart_time, arrive_date, arrive_time, airplane_id, base_price,
             status,
             arrive_airport_name, depart_airport_name)
         sql_str = "Insert into flight(airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,airplane_id,base_price,status,arrive_airport_name,depart_airport_name)" \
-                  f"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                  "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         cursor.execute(sql_str, args)
+
+        create_tickets(base_price, airline_name, flight_num, depart_date, depart_time, capacity)
+
         return HttpResponseRedirect(reverse('App:staff_index'))
 
 
