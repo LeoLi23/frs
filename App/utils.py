@@ -160,9 +160,6 @@ def top_destination_all_list(c_list, a_list):
                 map[item[0]] = item[1]
             else:
                 map[item[0]] += item[1]
-    # map['Guangzhou'] = 5
-    # map['Beijing'] = 2
-    # map['Hangzhou'] = 7
 
     res = sorted(map.items(), key=lambda x: x[1], reverse=True)
     return res
@@ -180,7 +177,7 @@ def create_tickets(sold_price, airline_name, flight_num, depart_date, depart_tim
             print(t_id)
             t_ids['id'].append(t_id)
             param.append([t_id, sold_price, airline_name, flight_num, depart_date, depart_time])
-            time.sleep(0.01)
+            time.sleep(0.001)
         else:
             continue
     try:
