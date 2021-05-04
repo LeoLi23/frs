@@ -53,9 +53,45 @@
                 <h3>Search for flights!</h3>
                 <form method = "POST">
                     {% csrf_token %}
-                    <fieldset class = "form-group">
-                        {{ form.as_p }}
-                    </fieldset>
+                    <div class="form-floating">
+                      <input type="date" class="form-control" id="departDate" required='required' name = "departDate">
+                      <label for="departDate">departDate</label>
+                    </div>
+
+                    <br><br>
+
+                  <div class="form-floating">
+                  <input type="date" class="form-control" id="returnDate"  name = "returnDate">
+                  <label for="returnDate">returnDate</label>
+                </div>
+
+            <br><br>
+
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="sourceCity" required='required' name = "sourceCity">
+                  <label for="sourceCity">sourceCity</label>
+                </div>
+
+            <br><br>
+
+              <div class="form-floating">
+              <input type="text" class="form-control" id="sourceAirport" required='required' name = "sourceAirport">
+              <label for="sourceAirport">sourceAirport</label>
+            </div>
+
+        <br><br>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="arriveCity" required='required' name = "arriveCity">
+              <label for="arriveCity">arriveCity</label>
+          </div>
+
+        <br><br>
+
+              <div class="form-floating">
+              <input type="text" class="form-control" id="arriveAirport" required='required' name = "arriveAirport">
+              <label for="arriveAirport">arriveAirport</label>
+                  <br><br>
+            </div>
                     <div class = "form-group">
                         <button class = "btn btn-primary" type = "submit"> Search </button>
                     </div>

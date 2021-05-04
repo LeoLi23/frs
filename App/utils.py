@@ -14,19 +14,28 @@ def hashed(pwd):
 def generate_ticket_id(flight_num):
     cursor = connection.cursor()
     sql_str1 = "select ticket_id,flight_num from customer_purchase natural join ticket natural join flight"
+    sql_str2 = "select ticket_id,flight_num from agent_purchase natural join ticket natural join flight"
+
     cursor.execute(sql_str1)
-    already_booked = cursor.fetchall()
-    # already_booked = CustomerPurchase.objects.values('ticket_id__ticket_id', 'ticket_id__flight_num')
+    already_booked_cp = cursor.fetchall()
+
+    cursor.execute(sql_str2)
+    already_booked_ap = cursor.fetchall()
+
     ticket_ids_booked = {'ticket_id': []}
     result = ''
+
+    already_booked = already_booked_ap + already_booked_cp
+
+    print('already_booked: ', already_booked)
 
     for pair in already_booked:
         if pair[1] == flight_num:
             ticket_ids_booked['ticket_id'].append(pair[0])
     print('ticket_ids_booked: ', ticket_ids_booked)
 
-    sql_str2 = f"select ticket_id from ticket natural join flight where flight_num = '{flight_num}'"
-    cursor.execute(sql_str2)
+    sql_str3 = f"select ticket_id from ticket natural join flight where flight_num = '{flight_num}'"
+    cursor.execute(sql_str3)
     all_ticket_ids = cursor.fetchall()
 
     print('all_ticket_ids: ', all_ticket_ids)
@@ -40,20 +49,20 @@ def generate_ticket_id(flight_num):
     return result
 
 
-def previous_than_today(date, time):
-    datetimeobj = dt.datetime.combine(date, time)
+def previous_than_today(date, t):
+    datetimeobj = dt.datetime.combine(date, t)
     today = dt.datetime.now()
     return datetimeobj < today
 
 
-def later_than_today(date, time):
-    datetimeobj = dt.datetime.combine(date, time)
+def later_than_today(date, t):
+    datetimeobj = dt.datetime.combine(date, t)
     today = dt.datetime.now()
     return datetimeobj > today
 
 
-def before_next_days(date, time, n):
-    datetimeobj = dt.datetime.combine(date, time)
+def before_next_days(date, t, n):
+    datetimeobj = dt.datetime.combine(date, t)
     if n > 0:
         today = dt.datetime.now()
         target = today + dt.timedelta(days=n)
@@ -150,18 +159,18 @@ def login_check_agent(func):
 
 
 def top_destination_all_list(c_list, a_list):
-    map = {}
+    mapp = {}
     for item in c_list:
-        map[item[0]] = item[1]
+        mapp[item[0]] = item[1]
 
     if len(a_list) > 0:
         for item in a_list:
-            if item[0] not in map:
-                map[item[0]] = item[1]
+            if item[0] not in mapp:
+                mapp[item[0]] = item[1]
             else:
-                map[item[0]] += item[1]
+                mapp[item[0]] += item[1]
 
-    res = sorted(map.items(), key=lambda x: x[1], reverse=True)
+    res = sorted(mapp.items(), key=lambda x: x[1], reverse=True)
     return res
 
 

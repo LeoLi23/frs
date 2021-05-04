@@ -15,77 +15,73 @@ logging.basicConfig(
 # main page
 def info(request):
     if request.method == 'POST':
-        form = FlightSearchForm(request.POST)
-        if form.is_valid():
-            SourceCity = form.cleaned_data['SourceCity']
-            DepartAirport = form.cleaned_data['DepartAirport']
-            DestinationCity = form.cleaned_data['DestinationCity']
-            ArriveAirport = form.cleaned_data['ArriveAirport']
-            Depart_date = form.cleaned_data['Depart_date']
-            Return_date = form.cleaned_data['Return_date']
-
-            # one way trip
-            if not Return_date:
-                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
-                          "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = %s and D.city = %s and " \
-                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
-                cursor = connection.cursor()
-                cursor.execute(sql_str, args)
-                flights = cursor.fetchall()
-                cursor.close()
-                connection.close()
-                if flights:
-                    print('one way flight search is successful')
-                    return render(request, 'main.html', {'form': form,
-                                                         'flights': flights,
-                                                         'trip_count': 1})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'main.html', {'form': form,
-                                                         'message': 'No flights available!'})
-
-            # round trip
+        SourceCity = request.POST.get('sourceCity')
+        DepartAirport = request.POST.get('sourceAirport')
+        DestinationCity = request.POST.get('arriveCity')
+        ArriveAirport = request.POST.get('arriveAirport')
+        Depart_date = request.POST.get('departDate')
+        Return_date = request.POST.get('returnDate')
+        # one way trip
+        if not Return_date:
+            args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+                      "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                      f" and flight.depart_airport_name = %s and D.city = %s and " \
+                      f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+            cursor = connection.cursor()
+            cursor.execute(sql_str, args)
+            flights = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            if flights:
+                print('one way flight search is successful')
+                return render(request, 'main.html', {
+                                                     'flights': flights,
+                                                     'trip_count': 1})
             else:
-                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                sql_str1 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+                print('cannot find flights')
+                return render(request, 'main.html', {
+                                                     'message': 'No flights available!'})
 
-                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
-                sql_str2 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+        # round trip
+        else:
+            args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            sql_str1 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
-                cursor = connection.cursor()
+            args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
+            sql_str2 = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
-                cursor.execute(sql_str1, args1)
-                flight_first = cursor.fetchall()
+            cursor = connection.cursor()
 
-                cursor.execute(sql_str2, args2)
-                flight_second = cursor.fetchall()
+            cursor.execute(sql_str1, args1)
+            flight_first = cursor.fetchall()
 
-                cursor.close()
-                connection.close()
+            cursor.execute(sql_str2, args2)
+            flight_second = cursor.fetchall()
 
-                if flight_first and flight_second:
-                    print("round trip flight search is successful")
-                    return render(request, 'main.html', {'form': form,
-                                                         'sourceCity': SourceCity,
-                                                         'destinationCity': DestinationCity,
-                                                         'flight_first': flight_first,
-                                                         'flight_second': flight_second,
-                                                         'trip_count': 2})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'main.html', {'form': form,
-                                                         'message': 'No flights available!'})
-    else:
-        form = FlightSearchForm(request.POST)
-    return render(request, 'main.html', {'form': form})
+            cursor.close()
+            connection.close()
+
+            if flight_first and flight_second:
+                print("round trip flight search is successful")
+                return render(request, 'main.html', {
+                    'sourceCity': SourceCity,
+                    'destinationCity': DestinationCity,
+                    'flight_first': flight_first,
+                    'flight_second': flight_second,
+                    'trip_count': 2})
+            else:
+                print('cannot find flights')
+                return render(request, 'main.html', {
+                    'message': 'No flights available!'})
+    elif request.method == 'GET':
+        return render(request, 'main.html')
 
 
 # login and register
@@ -178,117 +174,108 @@ def register_booking_agent(request):
 
 def login_customer(request):
     if request.method == 'POST':
-        form = CustomerLoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-            password = hashed(password)
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password = hashed(password)
 
-            cursor = connection.cursor()
-            cursor.execute("select email from customer where email = %s;", email)
+        cursor = connection.cursor()
+        cursor.execute("select email from customer where email = %s;", email)
 
-            check_email = cursor.fetchall()
-            if not check_email:
-                return render(request, 'customer/login.html',
-                              {'form': form, 'message': "Email address doesn't exist!", 'need_to_signup': True})
+        check_email = cursor.fetchall()
+        if not check_email:
+            return render(request, 'customer/login.html',
+                          {'message': "Email address doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute("select email from customer where email = %s and password = %s;", (email, password))
-            check_matches = cursor.fetchall()
-            cursor.close()
-            connection.close()
-            if check_matches:
-                logging.info('log in successfully')
-                request.session['user'] = email
-                request.session['user_type'] = 'customer'
-                logging.info('session ID: ' + request.session['user'])
-                return HttpResponseRedirect(reverse('App:customer_index'))
-            else:
-                print('invalid password')
-                return render(request, 'customer/login.html',
-                              {'form': form, 'message': 'Wrong password/email Please try again!',
-                               'need_to_signup': False})
+        cursor.execute("select email from customer where email = %s and password = %s;", (email, password))
+        check_matches = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        if check_matches:
+            logging.info('log in successfully')
+            request.session['user'] = email
+            request.session['user_type'] = 'customer'
+            logging.info('session ID: ' + request.session['user'])
+            return HttpResponseRedirect(reverse('App:customer_index'))
+        else:
+            print('invalid password')
+            return render(request, 'customer/login.html',
+                          {'message': 'Wrong password/email Please try again!',
+                           'need_to_signup': False})
     else:
-        form = CustomerLoginForm()
-    return render(request, 'customer/login.html', {'form': form})
+        return render(request, 'customer/login.html')
 
 
 def login_staff(request):
     if request.method == 'POST':
-        form = StaffLoginForm(request.POST)
-        if form.is_valid():
-            cursor = connection.cursor()
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            password = hashed(password)
+        cursor = connection.cursor()
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        password = hashed(password)
 
-            cursor.execute(f"select * from staff where username = %s;", username)
-            check_username = cursor.fetchall()
-            if not check_username:
-                return render(request, 'staff/login.html',
-                              {'form': form, 'message': "username doesn't exist!", 'need_to_signup': True})
+        cursor.execute(f"select * from staff where username = %s;", username)
+        check_username = cursor.fetchall()
+        if not check_username:
+            return render(request, 'staff/login.html',
+                          {'message': "username doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute(f"select airline_name from staff where username = %s and password = %s;",
-                           (username, password))
-            check_matches = cursor.fetchall()
-            cursor.close()
-            connection.close()
-            if check_matches:
-                print('log in successfully')
-                request.session['user'] = username
-                request.session['airline_name'] = check_matches[0][0]
-                request.session['user_type'] = 'staff'
-                print('session ID: ', request.session['user'])
-                print('session airline_name: ', request.session['airline_name'])
-                print('user type: ', request.session['user_type'])
-                return HttpResponseRedirect(reverse('App:staff_index'))
-            else:
-                return render(request, 'staff/login.html',
-                              {'form': form, 'message': 'Wrong password/username Please try again!',
-                               'need_to_signup': False})
+        cursor.execute(f"select airline_name from staff where username = %s and password = %s;",
+                       (username, password))
+        check_matches = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        if check_matches:
+            print('log in successfully')
+            request.session['user'] = username
+            request.session['airline_name'] = check_matches[0][0]
+            request.session['user_type'] = 'staff'
+            print('session ID: ', request.session['user'])
+            print('session airline_name: ', request.session['airline_name'])
+            print('user type: ', request.session['user_type'])
+            return HttpResponseRedirect(reverse('App:staff_index'))
+        else:
+            return render(request, 'staff/login.html',
+                          {'message': 'Wrong password/username Please try again!',
+                           'need_to_signup': False})
     else:
-        form = StaffLoginForm()
-    return render(request, 'staff/login.html', {'form': form})
+        return render(request, 'staff/login.html')
 
 
 def login_booking_agent(request):
     if request.method == 'POST':
-        form = BookingAgentLoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            agent_id = form.cleaned_data['agent_id']
-            password = form.cleaned_data['password']
-            hashed_password = hashed(password)
+        email = request.POST.get('email')
+        agent_id = request.POST.get('agent_id')
+        password = request.POST.get('password')
+        password = hashed(password)
 
-            # check if email exists
-            cursor = connection.cursor()
-            cursor.execute("select * from booking_agent where agent_email = %s;", email)
-            check_email = cursor.fetchall()
+        # check if email exists
+        cursor = connection.cursor()
+        cursor.execute("select * from booking_agent where agent_email = %s;", email)
+        check_email = cursor.fetchall()
 
-            if not check_email:
-                return render(request, 'booking_agent/login.html',
-                              {'form': form, 'message': "Email address doesn't exist!", 'need_to_signup': True})
+        if not check_email:
+            return render(request, 'booking_agent/login.html',
+                          {'message': "Email address doesn't exist!", 'need_to_signup': True})
 
-            cursor.execute("select * from booking_agent where agent_email = %s and agent_password = %s;",
-                           (email, hashed_password))
-            check_matches = cursor.fetchall()
-            cursor.close()
-            connection.close()
+        cursor.execute("select * from booking_agent where agent_email = %s and agent_password = %s and agent_id = %s;",
+                       (email, password, agent_id))
+        check_matches = cursor.fetchall()
+        cursor.close()
+        connection.close()
 
-            if check_matches:
-                print('log in successfully')
-                request.session['user'] = email
-                request.session['user_type'] = 'agent'
-                request.session['agent_id'] = agent_id
-                print('session ID: ', request.session['user'])
-                print('agent ID: ', request.session['agent_id'])
-                return HttpResponseRedirect(reverse('App:agent_index'))
-            else:
-                return render(request, 'booking_agent/login.html',
-                              {'form': form, 'message': 'Wrong password/email Please try again!',
-                               'need_to_signup': False})
+        if check_matches:
+            print('log in successfully')
+            request.session['user'] = email
+            request.session['user_type'] = 'agent'
+            request.session['agent_id'] = agent_id
+            print('session ID: ', request.session['user'])
+            print('agent ID: ', request.session['agent_id'])
+            return HttpResponseRedirect(reverse('App:agent_index'))
+        else:
+            return render(request, 'booking_agent/login.html',
+                          {'message': 'Wrong password/email/agent_id Please try again!',
+                           'need_to_signup': False})
     else:
-        form = BookingAgentLoginForm()
-    return render(request, 'booking_agent/login.html', {'form': form})
+        return render(request, 'booking_agent/login.html')
 
 
 # Customer use cases
@@ -301,161 +288,202 @@ def customer_index(request):
     cursor.execute("select name from customer where email = %s;", email)
     customer_name = cursor.fetchall()[0][0]
 
-    sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
-              "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
-              "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name"
-    cursor.execute(sql_str, email)
-    flights = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    if request.method == 'GET':
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
+                  "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
+                  "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
+        cursor.execute(sql_str, email)
+        flights = cursor.fetchall()
+        cursor.close()
+        connection.close()
 
-    print(flights)
+        print(flights)
 
-    if len(flights) > 0 and len(flights[0]) > 0:
-        # history flights: arrive_datetime < now
-        # future flights: depart_datetime > now
-        history_flights = [flight for flight in flights
-                           if previous_than_today(flight[4], flight[5])]
-        future_flights = [flight for flight in flights
-                          if later_than_today(flight[2], flight[3])]
-        current_flight = [flight for flight in flights if
-                          flight not in history_flights and flight not in future_flights]
-        print(history_flights)
-        print(future_flights)
-        print(current_flight)
-        return render(request, 'customer/index.html',
-                      {'customer': customer_name, 'history_flights': history_flights, 'future_flights': future_flights,
-                       'current_flights': current_flight})
-    else:
-        return render(request, 'customer/index.html',
-                      {'customer': customer_name, 'message': "You didn't purchase any ticket!"})
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # history flights: arrive_datetime < now
+            # future flights: depart_datetime > now
+            history_flights = [flight for flight in flights
+                               if previous_than_today(flight[4], flight[5])]
+            future_flights = [flight for flight in flights
+                              if later_than_today(flight[2], flight[3])]
+            current_flight = [flight for flight in flights if
+                              flight not in history_flights and flight not in future_flights]
+            print(history_flights)
+            print(future_flights)
+            print(current_flight)
+            return render(request, 'customer/index.html',
+                          {'customer': customer_name, 'history_flights': history_flights,
+                           'future_flights': future_flights,
+                           'current_flights': current_flight})
+        else:
+            return render(request, 'customer/index.html',
+                          {'customer': customer_name, 'message': "You didn't purchase any ticket!"})
+
+    elif request.method == 'POST':
+        startDate = convert_str_to_date_YYYYMMDD(request.POST.get('startDate'))
+        endDate = convert_str_to_date_YYYYMMDD(request.POST.get('endDate'))
+        sourceCity = request.POST.get('sourceCity')
+        arriveCity = request.POST.get('arriveCity')
+        sourceAirport = request.POST.get('sourceAirport')
+        arriveAirport = request.POST.get('arriveAirport')
+
+        args = (email, startDate, endDate, sourceCity, sourceAirport, arriveCity, arriveAirport)
+
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price " + \
+                  "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
+                  "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " \
+                  "and (depart_date between %s and %s) and D.city = %s and D.name = %s and A.city = %s and A.name = %s;"
+
+        cursor.execute(sql_str, args)
+
+        flights = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        print('search results:', flights, 'len = ', len(flights))
+
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # future flights: depart_datetime > now
+            # history flights: arrive_datetime < now
+            # current_flights: depart_datetime < now and arrive_datetime > now
+            future_flights = [f for f in flights if later_than_today(f[2], f[3])]
+
+            # dates, airports, cities
+            history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
+            current_flights = [f for f in flights if
+                               previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
+            logging.info(future_flights)
+            logging.info(history_flights)
+            logging.info(current_flights)
+
+            return render(request, 'customer/index.html',
+                          {'customer': customer_name, 'history_flights': history_flights,
+                           'future_flights': future_flights,
+                           'current_flights': current_flights})
+
+        else:
+            return render(request, 'customer/index.html',
+                          {'customer': customer_name, 'message': "You didn't purchase any ticket!"})
 
 
 @login_check_customer
 def customer_search(request):
     if request.method == 'POST':
-        form = FlightSearchForm(request.POST)
-        if form.is_valid():
-            SourceCity = form.cleaned_data['SourceCity']
-            DepartAirport = form.cleaned_data['DepartAirport']
-            DestinationCity = form.cleaned_data['DestinationCity']
-            ArriveAirport = form.cleaned_data['ArriveAirport']
-            Depart_date = form.cleaned_data['Depart_date']
-            Return_date = form.cleaned_data['Return_date']
+        SourceCity = request.POST.get('sourceCity')
+        DepartAirport = request.POST.get('sourceAirport')
+        DestinationCity = request.POST.get('arriveCity')
+        ArriveAirport = request.POST.get('arriveAirport')
+        Depart_date = request.POST.get('departDate')
+        Return_date = request.POST.get('returnDate')
 
-            # one way trip
-            if not Return_date:
-                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                          "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = %s and D.city = %s and " \
-                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
-                cursor = connection.cursor()
-                cursor.execute(sql_str, args)
-                flights = cursor.fetchall()
-                cursor.close()
-                connection.close()
-                if flights:
-                    print('one way flight search is successful')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'flights': flights,
-                                                                    'trip_count': 1})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'message': 'No flights available!'})
-
-            # round trip
+        # one way trip
+        if not Return_date:
+            args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                      "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                      f" and flight.depart_airport_name = %s and D.city = %s and " \
+                      f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+            cursor = connection.cursor()
+            cursor.execute(sql_str, args)
+            flights = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            if flights:
+                print('one way flight search is successful')
+                return render(request, 'customer/search.html', {
+                                                                'flights': flights,
+                                                                'trip_count': 1})
             else:
-                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
-                sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+                print('cannot find flights')
+                return render(request, 'customer/search.html', {
+                                                                'message': 'No flights available!'})
 
-                sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+        # round trip
+        else:
+            args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
+            sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
 
-                cursor = connection.cursor()
+            sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
 
-                cursor.execute(sql_str1, args1)
-                flight_first = cursor.fetchall()
+            cursor = connection.cursor()
 
-                cursor.execute(sql_str2, args2)
-                flight_second = cursor.fetchall()
+            cursor.execute(sql_str1, args1)
+            flight_first = cursor.fetchall()
 
-                cursor.close()
-                connection.close()
+            cursor.execute(sql_str2, args2)
+            flight_second = cursor.fetchall()
 
-                if flight_first and flight_second:
-                    print("round trip flight search is successful")
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'sourceCity': SourceCity,
-                                                                    'destinationCity': DestinationCity,
-                                                                    'flight_first': flight_first,
-                                                                    'flight_second': flight_second,
-                                                                    'trip_count': 2})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'message': 'No flights available!'})
+            cursor.close()
+            connection.close()
+
+            if flight_first and flight_second:
+                print("round trip flight search is successful")
+                return render(request, 'customer/search.html', {
+                                                                'sourceCity': SourceCity,
+                                                                'destinationCity': DestinationCity,
+                                                                'flight_first': flight_first,
+                                                                'flight_second': flight_second,
+                                                                'trip_count': 2})
+            else:
+                print('cannot find flights')
+                return render(request, 'customer/search.html', {
+                                                                'message': 'No flights available!'})
     else:
-        form = FlightSearchForm(request.POST)
-    return render(request, 'customer/search.html', {'form': form})
+        return render(request, 'customer/search.html')
 
 
 @login_check_customer
 def customer_purchase(request):
     if request.method == 'POST':
-        form = CustomerPurchaseForm(request.POST)
-        if form.is_valid():
-            flight_num = request.POST.get('flight_num')
-            logging.info(flight_num)
-            customer_email = form.cleaned_data['email']
-            card_type = form.cleaned_data['card_type']
-            card_num = form.cleaned_data['card_num']
-            name_on_card = form.cleaned_data['name_on_card']
-            expire_at = form.cleaned_data['expire_at']
-            purchase_date = dt.date.today()
-            purchase_time = dt.datetime.now().time()
-            t_id = generate_ticket_id(flight_num)
-            print('generated_t_id: ', t_id)
+        flight_num = request.POST.get('flight_num')
+        customer_email = request.POST.get('email')
+        card_type = request.POST.get('card_type')
+        card_num = request.POST.get('card_num')
+        name_on_card = request.POST.get('name_on_card')
+        expire_at = request.POST.get('expire_at')
+        print('card_type', card_type)
+        purchase_date = dt.date.today()
+        purchase_time = dt.datetime.now().time()
+        t_id = generate_ticket_id(flight_num)
+        print('generated_t_id: ', t_id)
 
-            cursor = connection.cursor()
-            args = (customer_email, t_id, card_type, card_num, name_on_card, expire_at, purchase_date, purchase_time)
-            sql_str1 = "Insert into customer_purchase(customer_email,ticket_id,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time) \
-                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
-            cursor.execute(sql_str1, args)
+        cursor = connection.cursor()
+        args = (customer_email, t_id, card_type, card_num, name_on_card, expire_at, purchase_date, purchase_time)
+        sql_str1 = "Insert into customer_purchase(customer_email,ticket_id,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time) \
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
+        cursor.execute(sql_str1, args)
 
-            sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
-                        where flight.airplane_id = airplane.ID and ticket.ticket_id = %s;"
-            cursor.execute(sql_str2, t_id)
-            seats, capacity, ID = cursor.fetchall()[0]
-            print('seats: ', seats, 'capacity: ', capacity)
+        sql_str2 = "select seats,capacity,ID from ticket natural join flight, airplane \
+                    where flight.airplane_id = airplane.ID and ticket.ticket_id = %s;"
+        cursor.execute(sql_str2, t_id)
+        seats, capacity, ID = cursor.fetchall()[0]
+        print('seats: ', seats, 'capacity: ', capacity)
 
-            # check seats
-            if seats > 0:
-                if seats <= capacity * 0.3:
-                    # 70% of tickets have been booked, 20 % increase in ticket price
-                    print("Sorry we need to increase the ticket price")
-                    cursor.execute(
-                        "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
-                # update seats
-                cursor.execute("update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
-                cursor.close()
-                connection.close()
-                print("Ticket successfully purchased!")
-                print("Remaining seats are ", seats - 1)
-                return HttpResponseRedirect(reverse('App:customer_index'))
-            else:
-                warning_msg = "Sorry, the airplane has reached its capacity!"
-                return render(request, 'customer/purchase.html', locals())
+        # check seats
+        if seats > 0:
+            if seats <= capacity * 0.3:
+                # 70% of tickets have been booked, 20 % increase in ticket price
+                print("Sorry we need to increase the ticket price")
+                cursor.execute(
+                    "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
+            # update seats
+            cursor.execute("update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
+            cursor.close()
+            connection.close()
+            print("Ticket successfully purchased!")
+            print("Remaining seats are ", seats - 1)
+            return HttpResponseRedirect(reverse('App:customer_index'))
+        else:
+            warning_msg = "Sorry, the airplane has reached its capacity!"
+            return render(request, 'customer/purchase.html', locals())
     else:
-        form = CustomerPurchaseForm()
-    return render(request, 'customer/purchase.html', locals())
+        return render(request, 'customer/purchase.html')
 
 
 @login_check_customer
@@ -592,7 +620,7 @@ def staff_index(request):
 
         args = (airline_name, sourceCity, sourceAirport, arriveCity, arriveAirport, startDate, endDate)
 
-        sql_str = f"select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport \
+        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport \
                 from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
              and flight.depart_airport_name = D.name and D.city = %s and depart_airport_name = %s and A.city = %s and arrive_airport_name = %s \
              and depart_date between %s and %s;"
@@ -776,9 +804,9 @@ def add_airport_staff(request):
 
 @login_check_staff
 def view_flight_ratings(request):
+    airline_name = request.session['airline_name']
     if request.method == 'POST':
         cursor = connection.cursor()
-        airline_name = request.POST.get('airline_name')
         flight_num = request.POST.get('flight_num')
         depart_date = request.POST.get('depart_date')
         depart_time = request.POST.get('depart_time')
@@ -789,7 +817,7 @@ def view_flight_ratings(request):
         args = (airline_name, flight_num, depart_date, depart_time)
 
         sql_str1 = f"select AVG(rating) from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
-        sql_str2 = f"select comment,rating from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
+        sql_str2 = f"select comment,rating,created_at from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
 
         cursor.execute(sql_str1, args)
         avg_rating = cursor.fetchall()
@@ -809,7 +837,8 @@ def view_flight_ratings(request):
         return render(request, 'staff/view_flight_ratings.html',
                       {'avg_rating': avg_rating, 'infos': infos, 'form': False, 'null_msg': null_msg})
 
-    return render(request, 'staff/view_flight_ratings.html', {'form': True})
+    if request.method == 'GET':
+        return render(request, 'staff/view_flight_ratings.html', {'form': True})
 
 
 @login_check_staff
@@ -1034,169 +1063,206 @@ def agent_index(request):
 
     email = request.session['user']
 
-    sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
-              "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
-              f"where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
-    cursor.execute(sql_str, email)
-    flights = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    if request.method == 'GET':
+        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, customer_email " + \
+                  "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
+                  f"where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
+        cursor.execute(sql_str, email)
+        flights = cursor.fetchall()
+        cursor.close()
+        connection.close()
 
-    print('flights: ', flights)
+        print('flights: ', flights)
 
-    if len(flights) > 0 and len(flights[0]) > 0:
-        # history flights: arrive_datetime < now
-        # future flights: depart_datetime > now
-        history_flights = [flight for flight in flights
-                           if previous_than_today(flight[4], flight[5])]
-        future_flights = [flight for flight in flights
-                          if later_than_today(flight[2], flight[3])]
-        current_flight = [flight for flight in flights if
-                          flight not in history_flights and flight not in future_flights]
-        print(history_flights)
-        print(future_flights)
-        print(current_flight)
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # history flights: arrive_datetime < now
+            # future flights: depart_datetime > now
+            history_flights = [flight for flight in flights
+                               if previous_than_today(flight[4], flight[5])]
+            future_flights = [flight for flight in flights
+                              if later_than_today(flight[2], flight[3])]
+            current_flights = [flight for flight in flights if
+                               flight not in history_flights and flight not in future_flights]
+            print(history_flights)
+            print(future_flights)
+            print(current_flights)
 
-        return render(request, 'booking_agent/index.html',
-                      {'history_flights': history_flights, 'future_flights': future_flights,
-                       'current_flights': current_flight})
-    else:
-        return render(request, 'booking_agent/index.html',
-                      {'message': "You didn't purchase any ticket yet!"})
+            return render(request, 'booking_agent/index.html',
+                          {'history_flights': history_flights, 'future_flights': future_flights,
+                           'current_flights': current_flights})
+        else:
+            return render(request, 'booking_agent/index.html',
+                          {'message': "You didn't purchase any ticket yet!"})
+
+    elif request.method == 'POST':
+        startDate = convert_str_to_date_YYYYMMDD(request.POST.get('startDate'))
+        endDate = convert_str_to_date_YYYYMMDD(request.POST.get('endDate'))
+        sourceCity = request.POST.get('sourceCity')
+        arriveCity = request.POST.get('arriveCity')
+        sourceAirport = request.POST.get('sourceAirport')
+        arriveAirport = request.POST.get('arriveAirport')
+
+        args = (email, startDate, endDate, sourceCity, sourceAirport, arriveCity, arriveAirport)
+
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, customer_email" + \
+                  "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
+                  "where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " \
+                  "and (depart_date between %s and %s) and D.city = %s and D.name = %s and A.city = %s and A.name = %s;"
+
+        cursor.execute(sql_str, args)
+
+        flights = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        print('search results:', flights, 'len = ', len(flights))
+
+        if len(flights) > 0 and len(flights[0]) > 0:
+            # future flights: depart_datetime > now
+            # history flights: arrive_datetime < now
+            # current_flights: depart_datetime < now and arrive_datetime > now
+            future_flights = [f for f in flights if later_than_today(f[2], f[3])]
+
+            # dates, airports, cities
+            history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
+            current_flights = [f for f in flights if
+                               previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
+            logging.info(future_flights)
+            logging.info(history_flights)
+            logging.info(current_flights)
+
+            return render(request, 'booking_agent/index.html',
+                          {'history_flights': history_flights, 'future_flights': future_flights,
+                           'current_flights': current_flights})
+        else:
+            return render(request, 'booking_agent/index.html',
+                          {'message': "You didn't purchase any ticket yet!"})
 
 
 @login_check_agent
 def agent_search(request):
     if request.method == 'POST':
-        form = FlightSearchForm(request.POST)
-        if form.is_valid():
-            SourceCity = form.cleaned_data['SourceCity']
-            DepartAirport = form.cleaned_data['DepartAirport']
-            DestinationCity = form.cleaned_data['DestinationCity']
-            ArriveAirport = form.cleaned_data['ArriveAirport']
-            Depart_date = form.cleaned_data['Depart_date']
-            Return_date = form.cleaned_data['Return_date']
+        SourceCity = request.POST.get('sourceCity')
+        DepartAirport = request.POST.get('sourceAirport')
+        DestinationCity = request.POST.get('arriveCity')
+        ArriveAirport = request.POST.get('arriveAirport')
+        Depart_date = request.POST.get('departDate')
+        Return_date = request.POST.get('returnDate')
 
-            # one way trip
-            if not Return_date:
-                args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                          "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                          f" and flight.depart_airport_name = %s and D.city = %s and " \
-                          f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
-                cursor = connection.cursor()
-                cursor.execute(sql_str, args)
-                flights = cursor.fetchall()
-                cursor.close()
-                connection.close()
-                if flights:
-                    print('one way flight search is successful')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'flights': flights,
-                                                                    'trip_count': 1})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'customer/search.html', {'form': form,
-                                                                    'message': 'No flights available!'})
-
-            # round trip
+        # one way trip
+        if not Return_date:
+            args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            sql_str = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                      "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                      f" and flight.depart_airport_name = %s and D.city = %s and " \
+                      f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+            cursor = connection.cursor()
+            cursor.execute(sql_str, args)
+            flights = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            if flights:
+                print('one way flight search is successful')
+                return render(request, 'customer/search.html', {
+                                                                'flights': flights,
+                                                                'trip_count': 1})
             else:
-                args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-                args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
+                print('cannot find flights')
+                return render(request, 'customer/search.html', {
+                                                                'message': 'No flights available!'})
 
-                sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+        # round trip
+        else:
+            args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
+            args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
 
-                sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
-                           "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                           f" and flight.depart_airport_name = %s and D.city = %s and " \
-                           f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+            sql_str1 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
-                cursor = connection.cursor()
+            sql_str2 = "select flight_num,airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+                       "from flight,airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                       f" and flight.depart_airport_name = %s and D.city = %s and " \
+                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
-                cursor.execute(sql_str1, args1)
-                flight_first = cursor.fetchall()
+            cursor = connection.cursor()
 
-                cursor.execute(sql_str2, args2)
-                flight_second = cursor.fetchall()
+            cursor.execute(sql_str1, args1)
+            flight_first = cursor.fetchall()
 
-                cursor.close()
-                connection.close()
+            cursor.execute(sql_str2, args2)
+            flight_second = cursor.fetchall()
 
-                if flight_first and flight_second:
-                    print("round trip flight search is successful")
-                    return render(request, 'booking_agent/search.html', {'form': form,
-                                                                         'sourceCity': SourceCity,
-                                                                         'destinationCity': DestinationCity,
-                                                                         'flight_first': flight_first,
-                                                                         'flight_second': flight_second,
-                                                                         'trip_count': 2})
-                else:
-                    print('cannot find flights')
-                    return render(request, 'booking_agent/search.html', {'form': form,
-                                                                         'message': 'No flights available!'})
+            cursor.close()
+            connection.close()
+
+            if flight_first and flight_second:
+                print("round trip flight search is successful")
+                return render(request, 'booking_agent/search.html', {
+                                                                     'sourceCity': SourceCity,
+                                                                     'destinationCity': DestinationCity,
+                                                                     'flight_first': flight_first,
+                                                                     'flight_second': flight_second,
+                                                                     'trip_count': 2})
+            else:
+                print('cannot find flights')
+                return render(request, 'booking_agent/search.html', {
+                                                                     'message': 'No flights available!'})
     else:
-        form = FlightSearchForm(request.POST)
-    return render(request, 'booking_agent/search.html', {'form': form})
+        return render(request, 'booking_agent/search.html')
 
 
 @login_check_agent
 def agent_purchase(request):
     if request.method == 'POST':
-        form = CustomerPurchaseForm(request.POST)
-        if form.is_valid():
-            agent_email = request.session['user']
-            agent_id = request.session['agent_id']
+        agent_email = request.session['user']
+        agent_id = request.session['agent_id']
 
-            flight_num = request.POST.get('flight_num')
-            logging.info(flight_num)
-            customer_email = form.cleaned_data['email']
-            card_type = form.cleaned_data['card_type']
-            card_num = form.cleaned_data['card_num']
-            name_on_card = form.cleaned_data['name_on_card']
-            expire_at = form.cleaned_data['expire_at']
-            purchase_date = dt.date.today()
-            purchase_time = dt.datetime.now().time()
-            t_id = generate_ticket_id(flight_num)
-            print('generated_t_id: ', t_id)
+        flight_num = request.POST.get('flight_num')
+        customer_email = request.POST.get('email')
+        card_type = request.POST.get('card_type')
+        card_num = request.POST.get('card_num')
+        name_on_card = request.POST.get('name_on_card')
+        expire_at = request.POST.get('expire_at')
+        purchase_date = dt.date.today()
+        purchase_time = dt.datetime.now().time()
+        t_id = generate_ticket_id(flight_num)
+        print('generated_t_id: ', t_id)
 
-            cursor = connection.cursor()
-            args = (
-                agent_email, agent_id, t_id, customer_email, card_type, card_num, name_on_card, expire_at,
-                purchase_date,
-                purchase_time)
-            sql_str1 = f"Insert into agent_purchase(agent_email, agent_id, ticket_id,customer_email,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-            cursor.execute(sql_str1, args)
+        cursor = connection.cursor()
+        args = (
+            agent_email, agent_id, t_id, customer_email, card_type, card_num, name_on_card, expire_at,
+            purchase_date,
+            purchase_time)
+        sql_str1 = f"Insert into agent_purchase(agent_email, agent_id, ticket_id,customer_email,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+        cursor.execute(sql_str1, args)
 
-            sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
-                        where flight.airplane_id = airplane.ID and ticket.ticket_id = %s"
-            cursor.execute(sql_str2, t_id)
-            seats, capacity, ID = cursor.fetchall()[0]
-            print('seats: ', seats, 'capacity: ', capacity)
+        sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
+                    where flight.airplane_id = airplane.ID and ticket.ticket_id = %s"
+        cursor.execute(sql_str2, t_id)
+        seats, capacity, ID = cursor.fetchall()[0]
+        print('seats: ', seats, 'capacity: ', capacity)
 
-            # check seats
-            if seats > 0:
-                if seats <= capacity * 0.3:
-                    # 70% of tickets have been booked, 20 % increase in ticket price
-                    print("Sorry we need to increase the ticket price")
-                    cursor.execute(
-                        "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
-                # update seats
-                cursor.execute(f"update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
-                cursor.close()
-                connection.close()
-                print("Ticket successful purchased!")
-                print("Remaining seats are ", seats - 1)
-                return HttpResponseRedirect(reverse('App:agent_index'))
-            else:
-                warning_msg = "Sorry, the airplane has reached its capacity!"
-                return render(request, 'booking_agent/purchase.html', locals())
+        # check seats
+        if seats > 0:
+            if seats <= capacity * 0.3:
+                # 70% of tickets have been booked, 20 % increase in ticket price
+                print("Sorry we need to increase the ticket price")
+                cursor.execute(
+                    "update ticket t set t.sold_price = t.sold_price * 1.2 where t.ticket_id = %s;", t_id)
+            # update seats
+            cursor.execute(f"update airplane a set a.seats = a.seats - 1 where a.ID = %s;", ID)
+            cursor.close()
+            connection.close()
+            print("Ticket successful purchased!")
+            print("Remaining seats are ", seats - 1)
+            return HttpResponseRedirect(reverse('App:agent_index'))
+        else:
+            warning_msg = "Sorry, the airplane has reached its capacity!"
+            return render(request, 'booking_agent/purchase.html', locals())
     else:
-        form = CustomerPurchaseForm()
-    return render(request, 'booking_agent/purchase.html', locals())
+        return render(request, 'booking_agent/purchase.html')
 
 
 @login_check_agent

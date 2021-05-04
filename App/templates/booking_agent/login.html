@@ -22,6 +22,7 @@
         </header>
     <div class="container">
         <div class = "content-section">
+            <br><br><br>
             {% if message %}
             <h2> {{ message }} </h2>
             {% if need_to_signup %}
@@ -30,10 +31,27 @@
         {% endif %}
             <form method = "POST">
                 {% csrf_token %}
-                <fieldset class = "form-group">
-                    <legend class = "border-bottom mb-4"> Let's Go </legend>
-                    {{ form.as_p }}
-                </fieldset>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="email" class="form-control" id="email" name="email" required="required">
+                        <label for="email"> email </label>
+                    </div>
+                </div>
+                <br>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="agent_id" name="agent_id" required="required">
+                        <label for="agent_id"> agent_id </label>
+                    </div>
+                </div>
+                <br>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" name="password" required="required">
+                        <label for="password"> password </label>
+                    </div>
+                </div>
+                <br>
                 <div class = "form-group">
                     <button class = "btn btn-primary" type = "submit"> Log in </button>
                 </div>

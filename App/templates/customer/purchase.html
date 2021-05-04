@@ -25,11 +25,54 @@
         <h2> Please fill out the form below! </h2>
         <form method = "POST">
             {% csrf_token %}
-            <label for="flight_num"> flight_num: </label>
-            <input type="text" id="flight_num" name="flight_num" value="" onclick="void varPass();"><br><br>
-            <fieldset class = "form-group">
-                {{ form.as_p }}
-            </fieldset>
+            <div class="col-md-5">
+                <div class="form-floating">
+                <input type="text" class = "form-control" id="flight_num" name="flight_num" value="" onclick="void varPass();"><br>
+                <label for="flight_num"> flight_num: </label>
+                </div>
+            </div>
+            <br>
+            <div class="col-md-5">
+                <div class="form-floating">
+                <input type="email" class = "form-control" id="email" name="email" required="required"><br>
+                <label for="email"> email </label>
+                </div>
+            </div>
+            <br>
+                    <div class="input-group">
+                        <label for="card_type"> card_type </label>
+                      <select class="custom-select" id="card_type" name="card_type" required="required">
+                        <option selected>Choose...</option>
+                        <option value="credit">credit</option>
+                        <option value="debit">debit</option>
+                      </select>
+                    </div>
+                <br>
+
+            <div class="col-md-5">
+                <div class="form-floating">
+                <input type="text" class="form-control" id="card_num" name="card_num" required="required"><br>
+                <label for="card_num"> card_num </label>
+                </div>
+            </div>
+                <br>
+
+            <div class="col-md-5">
+                <div class="form-floating">
+                <input type="text" class="form-control" id="name_on_card" name="name_on_card" required="required"><br>
+                <label for="name_on_card"> name_on_card </label>
+                </div>
+            </div>
+                <br>
+
+            <div class="col-md-5">
+                <div class="form-floating">
+                <input type="date" class="form-control" id="expire_at" name="expire_at"><br>
+                <label for="expire_at"> expire_at </label>
+                </div>
+            </div>
+                <br>
+
             <div class = "form-group">
                 <button class = "btn btn-primary" type = "submit"> Submit </button>
             </div>

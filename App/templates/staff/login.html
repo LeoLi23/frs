@@ -31,9 +31,20 @@
             <form method = "POST">
                 {% csrf_token %}
                 <br>
-                <fieldset class = "form-group">
-                    {{ form.as_p }}
-                </fieldset>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="username" name="username" required="required">
+                        <label for="username"> username </label>
+                    </div>
+                </div>
+                <br>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" name="password" required="required">
+                        <label for="password"> password </label>
+                    </div>
+                </div>
+                <br>
                 <div class = "form-group">
                     <button class = "btn btn-primary" type = "submit"> Log in </button>
                 </div>

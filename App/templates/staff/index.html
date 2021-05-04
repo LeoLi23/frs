@@ -32,10 +32,10 @@
                   <th scope="col">Arrival_date</th>
                   <th scope="col">Arrival_time</th>
                     <th scope="col">Status</th>
-                    <th scope="col"> Arrive_airport_city</th>
-                    <th scope="col"> Arrive_airport </th>>
-                    <th scope="col"> Depart_airport_city</th>
-                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Arrive city</th>
+                    <th scope="col"> Arrive airport </th>>
+                    <th scope="col"> Source city</th>
+                    <th scope="col"> Source airport </th>
                     <th scope="col"> View ratings </th>
 
                 </tr>
@@ -48,7 +48,7 @@
                                 <td> {{ item }} </td>
                             {% endfor %}
                             <td> <a href="view_ratings?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
-                             class="btn btn-primary" role="button" data-bs-toggle="button">ratings</a> </td>
+                             class="btn btn-primary" role="button" data-bs-toggle="button">View</a> </td>
                             </tr>
                         {% endfor %}
               </tbody>
@@ -67,10 +67,10 @@
                   <th scope="col">Arrival_date</th>
                   <th scope="col">Arrival_time</th>
                     <th scope="col">Status</th>
-                    <th scope="col"> Arrive_airport_city</th>
-                    <th scope="col"> Arrive_airport </th>>
-                    <th scope="col"> Depart_airport_city</th>
-                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Arrive city</th>
+                    <th scope="col"> Arrive airport </th>>
+                    <th scope="col"> Source city</th>
+                    <th scope="col"> Source airport </th>
                     <th scope="col"> Change Status </th>
                 </tr>
               </thead>
@@ -101,10 +101,10 @@
                   <th scope="col">Arrival_date</th>
                   <th scope="col">Arrival_time</th>
                     <th scope="col">Status</th>
-                    <th scope="col"> Arrive_airport_city</th>
-                    <th scope="col"> Arrive_airport </th>>
-                    <th scope="col"> Depart_airport_city</th>
-                    <th scope="col"> Depart_airport </th>
+                    <th scope="col"> Arrive city</th>
+                    <th scope="col"> Arrive airport </th>>
+                    <th scope="col"> Source city</th>
+                    <th scope="col"> Source airport </th>
                     <th scope="col"> Change Status </th>
                 </tr>
               </thead>

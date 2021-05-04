@@ -25,11 +25,12 @@
                                   <th scope="col">Depart_time</th>
                                   <th scope="col">Arrival_date</th>
                                   <th scope="col">Arrival_time</th>
-                                    <th scope="col"> Arrive_airport_city</th>
-                                    <th scope="col"> Arrive_airport </th>>
-                                    <th scope="col"> Depart_airport_city</th>
-                                    <th scope="col"> Depart_airport </th>
+                                    <th scope="col"> Arrive city</th>
+                                    <th scope="col"> Arrive airport </th>>
+                                    <th scope="col"> Source city</th>
+                                    <th scope="col"> Source airport </th>
                                     <th scope="col"> Cost </th>
+                                    <th scope="col"> Buy for </th>
                                 </tr>
                               </thead>
 
@@ -37,9 +38,6 @@
                               <tr>
                                     {% for flight in history_flights %}
                                         <tr>
-{#                                        <td> <a href="comment?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"#}
-{#                                                class="btn btn-primary" role="button" data-bs-toggle="button">Comment</a></td>#}
-
                                         {% for item in flight %}
                                             <td> {{ item }} </td>
                                         {% endfor %}
@@ -65,11 +63,12 @@
                                   <th scope="col">Depart_time</th>
                                   <th scope="col">Arrival_date</th>
                                   <th scope="col">Arrival_time</th>
-                                    <th scope="col"> Arrive_airport_city</th>
-                                    <th scope="col"> Arrive_airport </th>>
-                                    <th scope="col"> Depart_airport_city</th>
-                                    <th scope="col"> Depart_airport </th>
+                                    <th scope="col"> Arrive city</th>
+                                    <th scope="col"> Arrive airport </th>>
+                                    <th scope="col"> Source city</th>
+                                    <th scope="col"> Source airport </th>
                                     <th scope="col"> Cost </th>
+                                    <th scope="col"> Buy for </th>
                                 </tr>
                               </thead>
 
@@ -100,11 +99,12 @@
                                   <th scope="col">Depart_time</th>
                                   <th scope="col">Arrival_date</th>
                                   <th scope="col">Arrival_time</th>
-                                    <th scope="col"> Arrive_airport_city</th>
-                                    <th scope="col"> Arrive_airport </th>>
-                                    <th scope="col"> Depart_airport_city</th>
-                                    <th scope="col"> Depart_airport </th>
+                                    <th scope="col"> Arrive city</th>
+                                    <th scope="col"> Arrive airport </th>>
+                                    <th scope="col"> Source city</th>
+                                    <th scope="col"> Source airport </th>
                                     <th scope="col"> Cost </th>
+                                    <th scope="col"> Buy for </th>
                                 </tr>
                               </thead>
 
@@ -127,6 +127,60 @@
                     {% if message %}
                         <h3> {{ message }}</h3>
                     {% endif %}
+<br><br>
+    <h3> You could obtain current/future/past flights based on following info! </h3><br><br>
+    <form name = 'myform' method = "POST">
+        {% csrf_token %}
+
+        <div class="row g-2">
+          <div class="col-md">
+            <div class="form-floating">
+              <input type="date" class="form-control" id="startDate" required='required' name = "startDate">
+              <label for="startDate">startDate</label>
+            </div>
+          </div>
+          <div class="col-md">
+              <div class="form-floating">
+              <input type="date" class="form-control" id="endDate" required='required' name = "endDate">
+              <label for="endDate">endDate</label>
+            </div>
+            </div>
+          </div>
+            <br><br>
+        <div class="row g-2">
+          <div class="col-md">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="sourceCity" required='required' name = "sourceCity">
+              <label for="sourceCity">sourceCity</label>
+            </div>
+          </div>
+          <div class="col-md">
+              <div class="form-floating">
+              <input type="text" class="form-control" id="sourceAirport" required='required' name = "sourceAirport">
+              <label for="sourceAirport">sourceAirport</label>
+            </div>
+            </div>
+          </div>
+    <br><br>
+        <div class="row g-2">
+          <div class="col-md">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="arriveCity" required='required' name = "arriveCity">
+              <label for="arriveCity">arriveCity</label>
+            </div>
+          </div>
+          <div class="col-md">
+              <div class="form-floating">
+              <input type="text" class="form-control" id="arriveAirport" required='required' name = "arriveAirport">
+              <label for="arriveAirport">arriveAirport</label>
+            </div>
+            </div>
+          </div>
+    <br><br>
+            <div class = "form-group">
+            <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
+            </div>
+    </form>
                 </div>
             </div>
         </div>

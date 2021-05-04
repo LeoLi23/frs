@@ -185,19 +185,3 @@ class StaffLoginForm(forms.Form):
     password = forms.CharField(label='Password', widget=forms.PasswordInput())
 
 
-class FlightSearchForm(forms.Form):
-    SourceCity = forms.CharField(label='SourceCity')
-    DepartAirport = forms.CharField(label='DepartAirport')
-    DestinationCity = forms.CharField(label='DestinationCity')
-    ArriveAirport = forms.CharField(label='ArriveAirport')
-    Depart_date = forms.DateField(label='Depart_date')
-    Return_date = forms.DateField(label='Return_date', required=False)
-
-
-class CustomerPurchaseForm(forms.Form):
-    email = forms.EmailField(label='Email', max_length=50)
-    card_type = forms.ChoiceField(choices=(("Debit", "Debit"), ("Credit", "Credit")))
-    card_num = forms.CharField()
-    name_on_card = forms.CharField()
-    expire_at = forms.DateField()
-

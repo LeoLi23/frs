@@ -27,9 +27,6 @@
               return "";
           }
       }
-      function varPass1() {
-            document.getElementById('airline_name').value = GetUrlParam("airline_name");//给HTML元素的value属性赋值
-        }
         function varPass2() {
             document.getElementById('flight_num').value = GetUrlParam("flight_num");//给HTML元素的value属性赋值
         }
@@ -51,17 +48,28 @@
                     {% if form %}
                         <form method = "POST">
                             {% csrf_token %}
-                            <label for="airline_name"> Airline name: </label><br>
-                            <input type="text" id="airline_name" name="airline_name" value='' onclick="void varPass1();"><br>
+                            <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="flight_num" name="flight_num" value='' onclick="void varPass2();"><br>
+                                    <label for="flight_num"> Flight num:</label><br>
+                            </div>
+                            </div>
+                            <br>
 
-                            <label for="flight_num"> Flight num:</label><br>
-                            <input type="text" id="flight_num" name="flight_num" value='' onclick="void varPass2();"><br>
+                            <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="depart_date" name="depart_date" value='' onclick="void varPass3();"><br>
+                                <label for="depart_date"> Depart date: </label><br>
+                            </div>
+                            </div>
+                            <br>
 
-                            <label for="depart_date"> Depart date: </label><br>
-                            <input type="text" id="depart_date" name="depart_date" value='' onclick="void varPass3();"><br>
-
-                            <label for="depart_time"> Depart time: </label><br>
-                            <input type="text" id="depart_time" name="depart_time" value='' onclick="void varPass4();"><br>
+                            <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="depart_time" name="depart_time" value='' onclick="void varPass4();"><br>
+                                 <label for="depart_time"> Depart time: </label><br>
+                            </div>
+                            </div>
 
                             <br><br>
                             <div class = "form-group">
@@ -79,6 +87,7 @@
                                         <tr>
                                           <th scope="col">Comment</th>
                                           <th scope="col">Rating</th>
+                                            <th scope="col">Created at </th>
                                         </tr>
                                       </thead>
 
