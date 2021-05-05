@@ -32,7 +32,7 @@ class CustomerRegisterForm(forms.Form):
             raise forms.ValidationError("your name is too long")
         else:
             cursor = connection.cursor()
-            cursor.execute(f"select * from customer where name = '{name}'")
+            cursor.execute("select * from customer where name = %s", name)
             filter_result = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -44,7 +44,7 @@ class CustomerRegisterForm(forms.Form):
         email = self.cleaned_data.get('email')
         if email_check(email):
             cursor = connection.cursor()
-            cursor.execute(f"select * from customer where email = '{email}'")
+            cursor.execute("select * from customer where email = %s", email)
             filter_result = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -91,7 +91,7 @@ class StaffRegisterForm(forms.Form):
             raise forms.ValidationError("your username is too long")
         else:
             cursor = connection.cursor()
-            cursor.execute(f"select * from staff where username = '{username}'")
+            cursor.execute("select * from staff where username = %s", username)
             filter_result = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -119,7 +119,7 @@ class StaffRegisterForm(forms.Form):
     def check_airline_name(self):
         airline_name = self.cleaned_data.get('airline_name')
         cursor = connection.cursor()
-        cursor.execute(f"select airline_name from airline where airline_name = '{airline_name}'")
+        cursor.execute("select airline_name from airline where airline_name = %s", airline_name)
         filter_result = cursor.fetchall()
         cursor.close()
         connection.close()
@@ -140,7 +140,7 @@ class BookingAgentRegisterForm(forms.Form):
         agent_email = self.cleaned_data.get('agent_email')
         if email_check(agent_email):
             cursor = connection.cursor()
-            cursor.execute(f"select * from booking_agent where agent_email = '{agent_email}'")
+            cursor.execute("select * from booking_agent where agent_email = %s", agent_email)
             filter_result = cursor.fetchall()
             cursor.close()
             connection.close()
@@ -168,20 +168,5 @@ class BookingAgentRegisterForm(forms.Form):
 
         return password2
 
-
-class CustomerLoginForm(forms.Form):
-    email = forms.EmailField(label='Email', max_length=50)
-    password = forms.CharField(label='Password', widget=forms.PasswordInput())
-
-
-class BookingAgentLoginForm(forms.Form):
-    email = forms.EmailField(label='Email', max_length=50)
-    agent_id = forms.CharField(label='agent_id')
-    password = forms.CharField(label='Password', widget=forms.PasswordInput())
-
-
-class StaffLoginForm(forms.Form):
-    username = forms.CharField(label='Username', max_length=50)
-    password = forms.CharField(label='Password', widget=forms.PasswordInput())
 
 

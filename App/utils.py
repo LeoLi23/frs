@@ -69,8 +69,23 @@ def before_next_days(date, t, n):
         return datetimeobj < target
 
 
+def correct_month_abbreviate(month):
+    lst = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    for m in lst:
+        if m in month:
+            return m
+
+
 def convert_str_to_date(d):
-    converted_date = dt.datetime.strptime(d, "%B %d, %Y").date()
+    if '.' in d:
+        index = d.index('.')
+        new = correct_month_abbreviate(d[:index])
+        d = new + d[index + 1:]
+
+    try:
+        converted_date = dt.datetime.strptime(d, "%B %d, %Y").date()
+    except ValueError:
+        converted_date = dt.datetime.strptime(d, "%b %d, %Y").date()
     return converted_date
 
 
@@ -110,9 +125,9 @@ def convert_to_month(val):
     if val == 5:
         return "May"
     if val == 6:
-        return "June"
+        return "Jun"
     if val == 7:
-        return "July"
+        return "Jul"
     if val == 8:
         return "Aug"
     if val == 9:

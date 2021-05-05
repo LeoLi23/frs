@@ -36,12 +36,12 @@ def info(request):
             if flights:
                 print('one way flight search is successful')
                 return render(request, 'main.html', {
-                                                     'flights': flights,
-                                                     'trip_count': 1})
+                    'flights': flights,
+                    'trip_count': 1})
             else:
                 print('cannot find flights')
                 return render(request, 'main.html', {
-                                                     'message': 'No flights available!'})
+                    'message': 'No flights available!'})
 
         # round trip
         else:
@@ -390,12 +390,12 @@ def customer_search(request):
             if flights:
                 print('one way flight search is successful')
                 return render(request, 'customer/search.html', {
-                                                                'flights': flights,
-                                                                'trip_count': 1})
+                    'flights': flights,
+                    'trip_count': 1})
             else:
                 print('cannot find flights')
                 return render(request, 'customer/search.html', {
-                                                                'message': 'No flights available!'})
+                    'message': 'No flights available!'})
 
         # round trip
         else:
@@ -425,15 +425,15 @@ def customer_search(request):
             if flight_first and flight_second:
                 print("round trip flight search is successful")
                 return render(request, 'customer/search.html', {
-                                                                'sourceCity': SourceCity,
-                                                                'destinationCity': DestinationCity,
-                                                                'flight_first': flight_first,
-                                                                'flight_second': flight_second,
-                                                                'trip_count': 2})
+                    'sourceCity': SourceCity,
+                    'destinationCity': DestinationCity,
+                    'flight_first': flight_first,
+                    'flight_second': flight_second,
+                    'trip_count': 2})
             else:
                 print('cannot find flights')
                 return render(request, 'customer/search.html', {
-                                                                'message': 'No flights available!'})
+                    'message': 'No flights available!'})
     else:
         return render(request, 'customer/search.html')
 
@@ -594,7 +594,7 @@ def staff_index(request):
             " from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name "
             "and flight.depart_airport_name = D.name", airline_name)
         flights = cursor.fetchall()
-        print(flights)
+        # print(flights)
         cursor.close()
         connection.close()
 
@@ -603,9 +603,11 @@ def staff_index(request):
             # history flights: arrive_datetime < now
             # current_flights: depart_datetime < now and arrive_datetime > now
             future_flights = [f for f in flights if later_than_today(f[2], f[3]) and before_next_days(f[2], f[3], 30)]
-            logging.info(future_flights)
+            history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
+            # logging.info(future_flights)
+            # logging.info(history_flights)
             return render(request, 'staff/index.html',
-                          {'staff': staff, 'future_flights': future_flights})
+                          {'staff': staff, 'future_flights': future_flights, 'history_flights': history_flights})
         else:
             return render(request, 'staff/index.html',
                           {'staff': staff, 'message': "No future flights!"})
@@ -630,7 +632,7 @@ def staff_index(request):
         flights = cursor.fetchall()
         cursor.close()
         connection.close()
-        print('search results:', flights, 'len = ', len(flights))
+        # print('search results:', flights, 'len = ', len(flights))
 
         if len(flights) > 0 and len(flights[0]) > 0:
             # future flights: depart_datetime > now
@@ -642,9 +644,9 @@ def staff_index(request):
             history_flights = [f for f in flights if previous_than_today(f[4], f[5])]
             current_flights = [f for f in flights if
                                previous_than_today(f[2], f[3]) and later_than_today(f[4], f[5])]
-            logging.info(future_flights)
-            logging.info(history_flights)
-            logging.info(current_flights)
+            # logging.info(future_flights)
+            # logging.info(history_flights)
+            # logging.info(current_flights)
 
             return render(request, 'staff/index.html',
                           {'staff': staff, 'future_flights': future_flights, 'history_flights': history_flights,
@@ -664,10 +666,10 @@ def view_customers_staff(request):
         cursor = connection.cursor()
         # customer-purchase
         sql_str1 = "select c.name from flight natural join ticket natural join customer_purchase as cp,customer as c where " \
-                   f"cp.customer_email = c.email and flight.flight_num = %s"
+                   "cp.customer_email = c.email and flight.flight_num = %s"
         # agent_purchase
         sql_str2 = "select c.name from flight natural join ticket natural join agent_purchase as ap, customer as c where " \
-                   f"ap.customer_email = c.email and flight.flight_num = %s"
+                   "ap.customer_email = c.email and flight.flight_num = %s"
 
         cursor.execute(sql_str1, flight_num)
         customer_names = cursor.fetchall()
@@ -754,8 +756,10 @@ def change_flight_status(request):
 
         cursor = connection.cursor()
         args = (newStatus, airline_name, flight_num, depart_date, depart_time)
-        sql_str = f"UPDATE flight SET status = %s WHERE airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s;"
+        print('args: ', args)
+        sql_str = "UPDATE flight t SET t.status = %s WHERE t.airline_name = %s and t.flight_num = %s and t.depart_date = %s and t.depart_time = %s;"
         cursor.execute(sql_str, args)
+
         cursor.close()
         connection.close()
         return HttpResponseRedirect(reverse('App:staff_index'))
@@ -816,8 +820,8 @@ def view_flight_ratings(request):
 
         args = (airline_name, flight_num, depart_date, depart_time)
 
-        sql_str1 = f"select AVG(rating) from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
-        sql_str2 = f"select comment,rating,created_at from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
+        sql_str1 = "select AVG(rating) from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
+        sql_str2 = "select comment,rating,created_at from rate natural join flight where airline_name = %s and flight_num = %s and depart_date = %s and depart_time = %s"
 
         cursor.execute(sql_str1, args)
         avg_rating = cursor.fetchall()
@@ -1163,12 +1167,12 @@ def agent_search(request):
             if flights:
                 print('one way flight search is successful')
                 return render(request, 'customer/search.html', {
-                                                                'flights': flights,
-                                                                'trip_count': 1})
+                    'flights': flights,
+                    'trip_count': 1})
             else:
                 print('cannot find flights')
                 return render(request, 'customer/search.html', {
-                                                                'message': 'No flights available!'})
+                    'message': 'No flights available!'})
 
         # round trip
         else:
@@ -1199,15 +1203,15 @@ def agent_search(request):
             if flight_first and flight_second:
                 print("round trip flight search is successful")
                 return render(request, 'booking_agent/search.html', {
-                                                                     'sourceCity': SourceCity,
-                                                                     'destinationCity': DestinationCity,
-                                                                     'flight_first': flight_first,
-                                                                     'flight_second': flight_second,
-                                                                     'trip_count': 2})
+                    'sourceCity': SourceCity,
+                    'destinationCity': DestinationCity,
+                    'flight_first': flight_first,
+                    'flight_second': flight_second,
+                    'trip_count': 2})
             else:
                 print('cannot find flights')
                 return render(request, 'booking_agent/search.html', {
-                                                                     'message': 'No flights available!'})
+                    'message': 'No flights available!'})
     else:
         return render(request, 'booking_agent/search.html')
 
