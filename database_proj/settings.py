@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'database_proj.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'frs',
+        'NAME': 'frs2',
         'USER': 'root',
         'PASSWORD': '12345678',
         'HOST': 'localhost',
