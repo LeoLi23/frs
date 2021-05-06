@@ -196,7 +196,7 @@ def create_tickets(sold_price, airline_name, flight_num, depart_date, depart_tim
     param = []
     t_ids = {'id': []}
     for i in range(capacity):
-        t_id = shortuuid.ShortUUID().random(length=11)
+        t_id = shortuuid.ShortUUID().random(length=22)
         if t_id not in t_ids['id']:
             print(t_id)
             t_ids['id'].append(t_id)
