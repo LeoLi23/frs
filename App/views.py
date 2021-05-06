@@ -25,7 +25,7 @@ def info(request):
         # one way trip
         if not Return_date:
             args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-            sql_str = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+            sql_str = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time, flight.status " + \
                       " from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                       " and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                       "flight.arrive_airport_name = %s and A.city = %s and depart_date = %s "
@@ -47,13 +47,13 @@ def info(request):
         # round trip
         else:
             args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-            sql_str1 = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+            sql_str1 = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,flight.status " + \
                        "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
             args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
-            sql_str2 = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time " + \
+            sql_str2 = "select flight.airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,flight.status " + \
                        "from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
@@ -290,7 +290,7 @@ def customer_index(request):
     customer_name = cursor.fetchall()[0][0]
 
     if request.method == 'GET':
-        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price " + \
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city as Arrival_city,arrive_airport_name,D.city as Depart_city,depart_airport_name, ticket.sold_price,flight.status " + \
                   "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
                   "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
         cursor.execute(sql_str, email)
@@ -330,7 +330,7 @@ def customer_index(request):
 
         args = (email, startDate, endDate, sourceCity, sourceAirport, arriveCity, arriveAirport)
 
-        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price " + \
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, flight.status " + \
                   "from customer, customer_purchase natural join ticket natural join flight,airport as A, airport as D " + \
                   "where customer.email = customer_purchase.customer_email and email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " \
                   "and (depart_date between %s and %s) and D.city = %s and D.name = %s and A.city = %s and A.name = %s;"
@@ -379,7 +379,7 @@ def customer_search(request):
         # one way trip
         if not Return_date:
             args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-            sql_str = "select flight_num, flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str = "select flight_num, flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                       "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                       " and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                       "flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
@@ -402,12 +402,12 @@ def customer_search(request):
         else:
             args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
             args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
-            sql_str1 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str1 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                        "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
 
-            sql_str2 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str2 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                        "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
@@ -594,7 +594,7 @@ def staff_index(request):
 
     if request.method == 'GET':
         cursor.execute(
-            "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport "
+            "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport,flight.status "
             " from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name "
             "and flight.depart_airport_name = D.name", airline_name)
         flights = cursor.fetchall()
@@ -626,7 +626,7 @@ def staff_index(request):
 
         args = (airline_name, sourceCity, sourceAirport, arriveCity, arriveAirport, startDate, endDate)
 
-        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport \
+        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport, flight.status \
                 from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
              and flight.depart_airport_name = D.name and D.city = %s and depart_airport_name = %s and A.city = %s and arrive_airport_name = %s \
              and depart_date between %s and %s;"
@@ -1080,9 +1080,9 @@ def agent_index(request):
     email = request.session['user']
 
     if request.method == 'GET':
-        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, customer_email " + \
+        sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,A.name,D.city,D.name, sold_price, customer_email,flight.status " + \
                   "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
-                  f"where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
+                  "where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name;"
         cursor.execute(sql_str, email)
         flights = cursor.fetchall()
         cursor.close()
@@ -1120,11 +1120,11 @@ def agent_index(request):
 
         args = (email, startDate, endDate, sourceCity, sourceAirport, arriveCity, arriveAirport)
 
-        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, customer_email" + \
+        sql_str = "SELECT airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,A.city,arrive_airport_name,D.city,depart_airport_name, sold_price, customer_email,flight.status " + \
                   "from booking_agent natural join agent_purchase natural join ticket natural join flight,airport as A, airport as D " + \
                   "where agent_email = %s and flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " \
                   "and (depart_date between %s and %s) and D.city = %s and D.name = %s and A.city = %s and A.name = %s;"
-
+        print(sql_str)
         cursor.execute(sql_str, args)
 
         flights = cursor.fetchall()
@@ -1167,7 +1167,7 @@ def agent_search(request):
         # one way trip
         if not Return_date:
             args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
-            sql_str = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                       "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                       f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
@@ -1178,12 +1178,12 @@ def agent_search(request):
             connection.close()
             if flights:
                 print('one way flight search is successful')
-                return render(request, 'customer/search.html', {
+                return render(request, 'booking_agent/search.html', {
                     'flights': flights,
                     'trip_count': 1})
             else:
                 print('cannot find flights')
-                return render(request, 'customer/search.html', {
+                return render(request, 'booking_agent/search.html', {
                     'message': 'No flights available!'})
 
         # round trip
@@ -1191,12 +1191,12 @@ def agent_search(request):
             args1 = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
             args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
 
-            sql_str1 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str1 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                        "from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
-            sql_str2 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price " + \
+            sql_str2 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
                        "from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
                        f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
                        f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
