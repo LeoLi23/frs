@@ -7,12 +7,42 @@
 <head>
     <meta charset="UTF-8">
     <title>View customers</title>
+    <script type="text/javascript">
+
+    　　function GetUrlParam(paraName) {
+          var url = decodeURI(document.location.toString());
+          var arrObj = url.split("?");
+          if (arrObj.length > 1) {
+              var arrPara = arrObj[1].split("&");
+              var arr;
+
+              for (var i = 0; i < arrPara.length; i++) {
+                  arr = arrPara[i].split("=");
+                  if (arr != null && arr[0] === paraName) {
+                      return arr[1];
+                  }
+              }
+              return "";
+          } else {
+              return "";
+          }
+      }
+        function varPass2() {
+            document.getElementById('flight_num').value = GetUrlParam("flight_num");//给HTML元素的value属性赋值
+        }
+        function varPass3() {
+            document.getElementById('depart_date').value = GetUrlParam("depart_date");//给HTML元素的value属性赋值
+        }
+        function varPass4() {
+            document.getElementById('depart_time').value = GetUrlParam("depart_time");//给HTML元素的value属性赋值
+        }
+    </script>
 </head>
 <body>
 <br><br><br><br>
     <main role="main" class="container">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="content">
                     {% if message %}
                         <h2> {{ message }} </h2>
@@ -24,6 +54,8 @@
                               <thead class="thead-light">
                                 <tr>
                                   <th scope="col">Customers</th>
+                                    <th scope="col">Email </th>
+                                    <th scope="col">View flights </th>
                                 </tr>
                               </thead>
 
@@ -33,27 +65,45 @@
                                             {% for item in name %}
                                                 <td> {{ item }} </td>
                                             {% endfor %}
+                                                <td> <a href="view_flights_for_one_customer?customer_email={{ name.1 }}" class="btn btn-primary" role="button" data-bs-toggle="button">Take me there!</a></td>
                                             </tr>
                                         {% endfor %}
                               </tbody>
                           </table>
                     {% endif %}
                     <br><br><br><br>
-                    <form method = "POST">
-                        {% csrf_token %}
-                        <div class="row g-2">
-                          <div class="col-md-4">
+                    {% if form %}
+                        <form method = "POST">
+                            {% csrf_token %}
+                            <div class="col-md-4">
                             <div class="form-floating">
-                              <input type="text" class="form-control" id="flight_num" required='required' name = "flight_num">
-                              <label for="flight_num">flight_num</label>
+                                <input type="text" class="form-control" id="flight_num" name="flight_num" value='' onclick="void varPass2();"><br>
+                                    <label for="flight_num"> Flight num:</label><br>
                             </div>
-                          </div>
-                        </div>
-                        <br><br>
-                        <div class = "form-group">
-                        <button class = "btn btn-primary position-relative" type = "submit"> Submit </button>
-                        </div>
-                    </form>
+                            </div>
+                            <br>
+
+                            <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="depart_date" name="depart_date" value='' onclick="void varPass3();"><br>
+                                <label for="depart_date"> Depart date: </label><br>
+                            </div>
+                            </div>
+                            <br>
+
+                            <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="depart_time" name="depart_time" value='' onclick="void varPass4();"><br>
+                                 <label for="depart_time"> Depart time: </label><br>
+                            </div>
+                            </div>
+
+                            <br><br>
+                            <div class = "form-group">
+                                <button class = "btn btn-primary" type = "submit"> View Customers </button>
+                            </div>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

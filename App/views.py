@@ -663,21 +663,29 @@ def staff_index(request):
 
 @login_check_staff
 def view_customers_staff(request):
+    airline_name = request.session['airline_name']
     if request.method == 'GET':
-        return render(request, 'staff/view_customers.html', {})
+        return render(request, 'staff/view_customers.html', {'form': True})
     elif request.method == 'POST':
         flight_num = request.POST.get('flight_num')
+        depart_date = request.POST.get('depart_date')
+        depart_time = request.POST.get('depart_time')
+
+        depart_date = convert_str_to_date(depart_date)
+        depart_time = convert_str_to_time(depart_time)
+
         cursor = connection.cursor()
         # customer-purchase
-        sql_str1 = "select c.name from flight natural join ticket natural join customer_purchase as cp,customer as c where " \
-                   "cp.customer_email = c.email and flight.flight_num = %s"
+        sql_str1 = "select c.name, c.email from flight natural join ticket natural join customer_purchase as cp,customer as c where " \
+                   "cp.customer_email = c.email and flight.flight_num = %s and flight.depart_date = %s and flight.depart_time = %s and flight.airline_name = %s"
         # agent_purchase
-        sql_str2 = "select c.name from flight natural join ticket natural join agent_purchase as ap, customer as c where " \
-                   "ap.customer_email = c.email and flight.flight_num = %s"
+        sql_str2 = "select c.name, c.email from flight natural join ticket natural join agent_purchase as ap, customer as c where " \
+                   "ap.customer_email = c.email and flight.flight_num = %s and flight.depart_date = %s and flight.depart_time = %s and flight.airline_name = %s"
 
-        cursor.execute(sql_str1, flight_num)
+        args = (flight_num, depart_date, depart_time, airline_name)
+        cursor.execute(sql_str1, args)
         customer_names = cursor.fetchall()
-        cursor.execute(sql_str2, flight_num)
+        cursor.execute(sql_str2, args)
         agent_customer_names = cursor.fetchall()
 
         print('customers:', customer_names)

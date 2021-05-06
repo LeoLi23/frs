@@ -37,6 +37,7 @@
                     <th scope="col"> Source city</th>
                     <th scope="col"> Source airport </th>
                     <th scope="col"> View ratings </th>
+                    <th scope="col"> View customers </th>
 
                 </tr>
               </thead>
@@ -49,6 +50,7 @@
                             {% endfor %}
                             <td> <a href="view_ratings?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}"
                              class="btn btn-primary" role="button" data-bs-toggle="button">View</a> </td>
+                            <td> <a href = "view_customers?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}" class="btn btn-primary" role="button" data-bs-toggle="button">View</a></td>
                             </tr>
                         {% endfor %}
               </tbody>
@@ -72,6 +74,7 @@
                     <th scope="col"> Source city</th>
                     <th scope="col"> Source airport </th>
                     <th scope="col"> Change Status </th>
+                    <th scope="col"> View customers </th>
                 </tr>
               </thead>
 
@@ -83,6 +86,7 @@
                             {% endfor %}
                             <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}&status={{ flight.6 }}"
                               class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                            <td> <a href = "view_customers?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}" class="btn btn-primary" role="button" data-bs-toggle="button">View</a></td>
                             </tr>
                         {% endfor %}
               </tbody>
@@ -106,6 +110,7 @@
                     <th scope="col"> Source city</th>
                     <th scope="col"> Source airport </th>
                     <th scope="col"> Change Status </th>
+                    <th scope="col"> View customers </th>
                 </tr>
               </thead>
 
@@ -117,6 +122,7 @@
                             {% endfor %}
                                 <td> <a href="changeStatus?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}&status={{ flight.6 }}"
                                  class="btn btn-primary" role="button" data-bs-toggle="button">Change Status</a> </td>
+                            <td> <a href = "view_customers?airline_name={{ flight.0 }}&flight_num={{ flight.1 }}&depart_date={{ flight.2 }}&depart_time={{ flight.3 }}" class="btn btn-primary" role="button" data-bs-toggle="button">View</a></td>
                             </tr>
                         {% endfor %}
               </tbody>

@@ -22,7 +22,10 @@ urlpatterns = [
     path('staff/register/', views.register_staff, name='register_staff'),
     path('staff/login/', views.login_staff, name='login_staff'),
     path('staff/logout/', views.logout_staff, name='logout_staff'),
-    path('staff/view_customers/', views.view_customers_staff, name='view_customers_staff'),
+    path('staff/view_customers', views.view_customers_staff, name='view_customers_staff'),
+    path('staff/view_flights_for_one_customer', views.view_flights_for_one_customer,
+         name='view_flights_for_one_customer_2'),
+
     path('staff/create_flight/', views.create_flight_staff, name='create_flight_staff'),
     path('staff/changeStatus', views.change_flight_status, name='change_flight_status'),
     path('staff/add_airplane/', views.add_airplane, name='add_airplane_staff'),
