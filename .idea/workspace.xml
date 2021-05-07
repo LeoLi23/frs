@@ -2,24 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b9962387-c6f3-40d4-af33-7787f8267c5c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/others/quries_decription.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/quries_decription.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/database_proj.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/templates/staff/view_reports.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/templates/staff/view_reports.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Part 1_Part 2_Part 3 of Course Project Spring 2021 V3-converted.docx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/~$rt 1_Part 2_Part 3 of Course Project Spring 2021 V3-converted.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,6 +72,7 @@
       <recent name="$PROJECT_DIR$/App" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/others" />
       <recent name="$PROJECT_DIR$/App/templates/customer" />
     </key>
   </component>
@@ -186,7 +171,7 @@
       <workItem from="1620061096227" duration="1429000" />
       <workItem from="1620114196904" duration="18290000" />
       <workItem from="1620203190226" duration="256000" />
-      <workItem from="1620285352728" duration="16788000" />
+      <workItem from="1620285352728" duration="17108000" />
     </task>
     <servers />
   </component>
