@@ -524,18 +524,23 @@ def logout_customer(request):
 def customer_spending(request):
     customer_email = request.session['user']
     if request.method == 'GET':
-        logging.info(customer_email)
         cursor = connection.cursor()
-        sql_str1 = f"select SUM(sold_price) from customer_purchase natural join ticket \
-                    where customer_email = %s and YEAR(purchase_date) = YEAR(CURDATE()) - 1"
 
-        cursor.execute(sql_str1, customer_email)
+        today = dt.date.today()
+        delta = relativedelta(years=1)
+        past_year = today - delta
+        sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+                    where customer_email = %s and (purchase_date between %s and %s)"
+
+        cursor.execute(sql_str1, (customer_email, past_year, today))
         data1 = cursor.fetchall()[0][0]
 
         if data1 is None:
             data1 = 0
 
-        today = dt.date.today()
+        # logging.info(data1)
+        # logging.info(past_year)
+
         delta = relativedelta(months=6)
         six_months_prev = today - delta
         # last 6 months
@@ -594,9 +599,9 @@ def staff_index(request):
 
     if request.method == 'GET':
         cursor.execute(
-            "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport,flight.status "
-            " from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name "
-            "and flight.depart_airport_name = D.name", airline_name)
+            "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport,flight.status \
+              from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
+              and flight.depart_airport_name = D.name", airline_name)
         flights = cursor.fetchall()
         # print(flights)
         cursor.close()
@@ -627,9 +632,9 @@ def staff_index(request):
         args = (airline_name, sourceCity, sourceAirport, arriveCity, arriveAirport, startDate, endDate)
 
         sql_str = "select airline_name,flight_num,depart_date,depart_time,arrival_date,arrival_time,status,A.city as Arrival_city,arrive_airport_name as arrive_airport,D.city as Depart_city,depart_airport_name as depart_airport, flight.status \
-                from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
-             and flight.depart_airport_name = D.name and D.city = %s and depart_airport_name = %s and A.city = %s and arrive_airport_name = %s \
-             and depart_date between %s and %s;"
+                 from flight,airport as D,airport as A where airline_name = %s and flight.arrive_airport_name = A.name \
+              and flight.depart_airport_name = D.name and D.city = %s and depart_airport_name = %s and A.city = %s and arrive_airport_name = %s \
+              and (depart_date between %s and %s);"
 
         cursor.execute(sql_str, args)
 
@@ -861,8 +866,11 @@ def view_flight_ratings(request):
 def view_most_frequent_customers(request):
     airline_name = request.session['airline_name']
     cursor = connection.cursor()
-    sql_str = "select customer_email,count(*) from ticket natural join customer_purchase where airline_name=%s and YEAR(purchase_date) = YEAR(CURDATE()) - 1 group by customer_email order by count(*) desc limit 5"
-    cursor.execute(sql_str, airline_name)
+    today = dt.date.today()
+    delta = relativedelta(years=1)
+    prev_year = today - delta
+    sql_str = "select customer_email,count(*) from ticket natural join customer_purchase where airline_name=%s and (purchase_date between %s and %s) group by customer_email order by count(*) desc limit 5"
+    cursor.execute(sql_str, (airline_name, prev_year, today))
     customer_infos = cursor.fetchall()
     print("customer_infos: ", customer_infos)
     return render(request, 'staff/most_frequent_customers.html', {'customer_infos': customer_infos})
@@ -877,7 +885,7 @@ def view_flights_for_one_customer(request):
 
         cursor = connection.cursor()
         args = (request.session['airline_name'], customer_email)
-        sql_str = "select flight_num, depart_date, depart_time, depart_airport_name, arrive_airport_name from flight natural join ticket natural join customer_purchase as cp, customer c where cp.customer_email = c.email and airline_name = %s and c.email = %s order by depart_date, depart_time ASC;"
+        sql_str = "select flight_num, depart_date, depart_time, depart_airport_name, arrive_airport_name from flight natural join ticket natural join customer_purchase as cp, customer c where cp.customer_email = c.email and airline_name = %s and c.email = %s order by depart_date, depart_time;"
         cursor.execute(sql_str, args)
         flight_infos = cursor.fetchall()
 
@@ -898,18 +906,18 @@ def view_reports_staff(request):
 
         args = (airline_name, startDate, endDate)
         # customer purchase
-        sql_str1 = "select SUM(sold_price) from customer_purchase natural join ticket \
+        sql_str1 = "select COUNT(ticket_id) from customer_purchase natural join ticket \
                     where airline_name = %s and (purchase_date between %s and %s);"
 
-        sql_str2 = "select MONTH(purchase_date), SUM(sold_price) from customer_purchase natural join ticket \
+        sql_str2 = "select MONTH(purchase_date), COUNT(ticket_id) from customer_purchase natural join ticket \
                                where airline_name = %s and (purchase_date between %s and %s) \
                                 group by MONTH(purchase_date) order by MONTH(purchase_date);"
 
         # agent_purchase
-        sql_str3 = "select SUM(sold_price) from agent_purchase natural join ticket \
+        sql_str3 = "select COUNT(ticket_id) from agent_purchase natural join ticket \
                     where airline_name = %s and (purchase_date between %s and %s);"
 
-        sql_str4 = "select MONTH(purchase_date), SUM(sold_price) from agent_purchase natural join ticket \
+        sql_str4 = "select MONTH(purchase_date), COUNT(ticket_id) from agent_purchase natural join ticket \
                                where airline_name = %s and (purchase_date between %s and %s) \
                                 group by MONTH(purchase_date) order by MONTH(purchase_date);"
 
@@ -935,6 +943,15 @@ def view_reports_staff(request):
 
         data2 = [[convert_to_month(r[0]), r[1]] for r in res]
 
+        mapp = {}
+        for item in data2:
+            if item[0] not in mapp:
+                mapp[item[0]] = item[1]
+            else:
+                mapp[item[0]] += item[1]
+
+        data2 = [[key, val] for key, val in mapp.items()]
+        print('dict: ', mapp)
         print('data1: ', data1)
         print('data2: ', data2)
 
@@ -953,15 +970,16 @@ def view_top_destinations(request):
     cursor = connection.cursor()
 
     today = dt.date.today()
-    delta = relativedelta(months=3)
-    three_months_prev = today - delta
-
+    delta1 = relativedelta(months=3)
+    delta2 = relativedelta(years=1)
+    three_months_prev = today - delta1
+    prev_year = today - delta2
     # customer purchase
     sql_str1 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
               and (arrival_date between %s and %s) \
               group by A.city order by count(A.city) desc;"
     sql_str2 = "select A.city as destination, count(A.city) as count from customer_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
-              and Year(arrival_date) = YEAR(curdate()) - 1 \
+              and (arrival_date between %s and %s) \
               group by A.city order by count(A.city) desc;"
 
     # agent purchase
@@ -969,18 +987,18 @@ def view_top_destinations(request):
               and (arrival_date between %s and %s) \
               group by A.city order by count(A.city) desc;"
     sql_str4 = "select A.city as destination, count(A.city) as count from agent_purchase natural join ticket natural join flight, airport as A where arrive_airport_name = A.name and airline_name = %s \
-              and Year(arrival_date) = YEAR(curdate()) - 1 \
+              and (arrival_date between %s and %s) \
               group by A.city order by count(A.city) desc;"
     cursor.execute(sql_str1, (airline_name, three_months_prev, today))
     result1 = cursor.fetchall()
 
-    cursor.execute(sql_str2, airline_name)
+    cursor.execute(sql_str2, (airline_name, prev_year, today))
     result2 = cursor.fetchall()
 
     cursor.execute(sql_str3, (airline_name, three_months_prev, today))
     result3 = cursor.fetchall()
 
-    cursor.execute(sql_str4, airline_name)
+    cursor.execute(sql_str4, (airline_name, prev_year, today))
     result4 = cursor.fetchall()
 
     # combine results from customer and agent purchase and sort in descending order
@@ -1004,7 +1022,7 @@ def view_top_booking_agents(request):
 
     today = dt.date.today()
     delta1 = relativedelta(months=1)
-    delta2 = relativedelta(months=12)
+    delta2 = relativedelta(years=1)
     past_month = today - delta1
     past_year = today - delta2
 
@@ -1061,6 +1079,10 @@ def revenue_comparison_staff(request):
     if res4 is None:
         res4 = 0
 
+    print('res1: ', res1)
+    print('res2: ', res2)
+    print('res3: ', res3)
+    print('res4: ', res4)
     return render(request, 'staff/compare_revenue.html', locals())
 
 
@@ -1168,9 +1190,9 @@ def agent_search(request):
         if not Return_date:
             args = (DepartAirport, SourceCity, ArriveAirport, DestinationCity, Depart_date)
             sql_str = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
-                      "from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                      f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
-                      f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
+                      " from flight,airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
+                      " and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
+                      " flight.arrive_airport_name = %s and A.city = %s and depart_date = %s;"
             cursor = connection.cursor()
             cursor.execute(sql_str, args)
             flights = cursor.fetchall()
@@ -1192,14 +1214,14 @@ def agent_search(request):
             args2 = (ArriveAirport, DestinationCity, DepartAirport, SourceCity, Return_date)
 
             sql_str1 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
-                       "from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                       f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
-                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+                       " from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " + \
+                       " and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
+                       " flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
             sql_str2 = "select flight_num,flight.airline_name,depart_date,depart_time,arrival_date,arrival_time,base_price,flight.status " + \
-                       "from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name" + \
-                       f" and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
-                       f"flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
+                       " from flight, airplane, airport as D, airport as A where flight.arrive_airport_name = A.name and flight.depart_airport_name = D.name " + \
+                       " and flight.depart_airport_name = %s and D.city = %s and flight.airline_name = airplane.airline_name and flight.airplane_id = airplane.ID and airplane.seats > 0 and " \
+                       " flight.arrive_airport_name = %s and A.city = %s and depart_date = %s"
 
             cursor = connection.cursor()
 
@@ -1250,11 +1272,11 @@ def agent_purchase(request):
             agent_email, agent_id, t_id, customer_email, card_type, card_num, name_on_card, expire_at,
             purchase_date,
             purchase_time)
-        sql_str1 = f"Insert into agent_purchase(agent_email, agent_id, ticket_id,customer_email,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
+        sql_str1 = "Insert into agent_purchase(agent_email, agent_id, ticket_id,customer_email,card_type,card_num,name_on_card,expire_at,purchase_date,purchase_time)\
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
         cursor.execute(sql_str1, args)
 
-        sql_str2 = f"select seats,capacity,ID from ticket natural join flight, airplane \
+        sql_str2 = "select seats,capacity,ID from ticket natural join flight, airplane \
                     where flight.airplane_id = airplane.ID and ticket.ticket_id = %s"
         cursor.execute(sql_str2, t_id)
         seats, capacity, ID = cursor.fetchall()[0]
@@ -1312,8 +1334,11 @@ def agent_commission(request):
 
         if total_commission is None:
             total_commission = 0
+
         if avg_commission is None:
             avg_commission = 0
+        else:
+            avg_commission = round(avg_commission, 2)
 
         cursor.execute(sql_str3, args)
         ticket_count = cursor.fetchall()[0][0]
@@ -1343,6 +1368,14 @@ def agent_commission(request):
 
         cursor.execute(sql_str2, args)
         avg_commission = cursor.fetchall()[0][0]
+
+        if total_commission is None:
+            total_commission = 0
+
+        if avg_commission is None:
+            avg_commission = 0
+        else:
+            avg_commission = round(avg_commission, 2)
 
         cursor.execute(sql_str3, args)
         ticket_count = cursor.fetchall()[0][0]
